@@ -1,0 +1,716 @@
+{
+  "catalog": [
+    {
+      "id": "cigano",
+      "name": "Baralho Cigano",
+      "category": "avulsas",
+      "price": 20,
+      "summary": "Perguntas sobre amor, trabalho, caminhos e decisões.",
+      "description": "Um oráculo amplo que permite compreender situações, energias, influências e possibilidades nas diversas áreas da vida. Você escolhe suas perguntas e recebe uma leitura voltada a clareza e direcionamento.",
+      "questions": [],
+      "tag": "Perguntas avulsas",
+      "featured": true,
+      "prices": {
+        "1": 20,
+        "2": 40,
+        "3": 55,
+        "4": 78
+      },
+      "questionCount": true
+    },
+    {
+      "id": "pombagira",
+      "name": "Baralho de Pomba Gira",
+      "category": "avulsas",
+      "price": 27,
+      "summary": "Respostas diretas para questões e situações da vida.",
+      "description": "Leituras diretas e objetivas por meio do Baralho de Pomba Gira, abordando sentimentos, relacionamentos, intenções, trabalho, finanças, espiritualidade e questões pessoais.",
+      "questions": [],
+      "tag": "Perguntas avulsas",
+      "featured": true,
+      "prices": {
+        "1": 27,
+        "2": 50,
+        "3": 77,
+        "4": 97
+      },
+      "questionCount": true
+    },
+    {
+      "id": "malandra",
+      "name": "Baralho de Malandra",
+      "category": "avulsas",
+      "price": 20,
+      "summary": "Uma visão esperta, estratégica e sem rodeios.",
+      "description": "Uma leitura com a visão esperta de quem sabe enxergar além do que está sendo mostrado. As cartas trazem estratégia e direcionamento para compreender melhor a situação e saber como se movimentar.",
+      "questions": [],
+      "tag": "Perguntas avulsas",
+      "featured": false,
+      "prices": {
+        "1": 20,
+        "2": 44,
+        "3": 54,
+        "4": 64
+      },
+      "questionCount": true
+    },
+    {
+      "id": "amor-proprio",
+      "name": "Amor Próprio",
+      "category": "amor",
+      "price": 50,
+      "summary": "Fortaleça a relação consigo e seu autocuidado.",
+      "description": "O método Flor do Amor é para quem quer fortalecer o amor-próprio e aprender a se cuidar com mais carinho.",
+      "questions": [
+        "Como está minha relação comigo mesmo?",
+        "O que devo enxergar sobre mim?",
+        "Como fortalecer meu amor-próprio?"
+      ],
+      "tag": "",
+      "featured": false
+    },
+    {
+      "id": "ficantes",
+      "name": "Ficantes",
+      "category": "amor",
+      "price": 47,
+      "summary": "Entenda os sentimentos e as tendências dessa conexão.",
+      "description": "Para quem quer compreender melhor o que está acontecendo com um ficante ou uma conexão que ainda não virou relacionamento.",
+      "questions": [
+        "Quais são os sentimentos dessa pessoa por você?",
+        "Qual a tendência futura entre vocês?",
+        "Qual o conselho do baralho sobre essa relação?"
+      ],
+      "tag": "",
+      "featured": false
+    },
+    {
+      "id": "quem-e-ele",
+      "name": "Quem é Ele(a)?",
+      "category": "amor",
+      "price": 90,
+      "summary": "O que existe além das aparências e atitudes?",
+      "description": "Uma leitura como um espelho espiritual: investiga o que é demonstrado, silenciado e percebido nas atitudes de alguém. Ideal para quem busca clareza com profundidade e sensibilidade.",
+      "questions": [
+        "Quem a pessoa demonstra ser",
+        "Quem ela realmente é",
+        "Sentimentos reais por você",
+        "Pensamentos reais sobre você",
+        "Conselho final"
+      ],
+      "tag": "",
+      "featured": false
+    },
+    {
+      "id": "amantes-amados",
+      "name": "Amantes ou Amados?",
+      "category": "amor",
+      "price": 90,
+      "summary": "O que une vocês além do desejo e da atração?",
+      "description": "Uma leitura para compreender o que realmente existe entre vocês, além da atração, do desejo e dos encontros.",
+      "questions": [
+        "O que ele sente por mim?",
+        "O que realmente nos une?",
+        "Quais são as intenções dele comigo?",
+        "O que impede essa relação de evoluir?",
+        "Essa relação tem potencial para se tornar algo sério?",
+        "Qual é a tendência dessa relação daqui para frente?"
+      ],
+      "tag": "",
+      "featured": false
+    },
+    {
+      "id": "desilusao",
+      "name": "Desilusão Amorosa",
+      "category": "amor",
+      "price": 90,
+      "summary": "Clareza e direção para atravessar uma decepção.",
+      "description": "Para quem está vivendo uma desilusão amorosa e precisa olhar a situação com mais clareza, entender o que ainda prende e refletir sobre o que é necessário para seguir em frente.",
+      "questions": [
+        "O que ainda me prende a essa pessoa?",
+        "O que eu preciso enxergar sobre essa relação?",
+        "O que essa pessoa realmente pode me oferecer?",
+        "O que preciso aceitar para conseguir soltar?",
+        "Como posso encerrar esse ciclo e seguir em frente?"
+      ],
+      "tag": "",
+      "featured": false
+    },
+    {
+      "id": "afrodite",
+      "name": "Templo de Afrodite",
+      "category": "amor",
+      "price": 97,
+      "summary": "Pensamentos, sentimentos, desejo e futuro do vínculo.",
+      "description": "Uma leitura profunda sobre emoções, pensamentos e desejos que conectam você e a pessoa amada, para entender melhor o que envolve esse laço.",
+      "questions": [
+        "Pensamentos (de ambos)",
+        "Sentimentos (de ambos)",
+        "Obstáculos da relação",
+        "Desejo (de ambos)",
+        "Tendência futura",
+        "Conselho"
+      ],
+      "tag": "",
+      "featured": false
+    },
+    {
+      "id": "diabo",
+      "name": "Templo do Diabo",
+      "category": "amor",
+      "price": 97,
+      "summary": "Uma leitura intensa sobre confiança e assuntos ocultos.",
+      "description": "Para quem precisa olhar com coragem para temas delicados do relacionamento, como confiança, segredos, desejos e dúvidas sobre fidelidade. As respostas são interpretações do oráculo, não provas de fatos.",
+      "questions": [
+        "Meu parceiro já me traiu?",
+        "Já teve intenção/pensamento de me trair?",
+        "Ele já falou mal de mim pelas minhas costas?",
+        "Teve pensamento de rompimento?",
+        "Ele tem outra pessoa na vida dele?",
+        "Ele sente algo além de desejo sexual?"
+      ],
+      "tag": "",
+      "featured": false
+    },
+    {
+      "id": "tapas-beijos",
+      "name": "Entre Tapas e Beijos",
+      "category": "amor",
+      "price": 100,
+      "summary": "Compreenda tensões, segredos e a energia do casal.",
+      "description": "Uma leitura profunda para refletir sobre as energias e os segredos que podem estar por trás da relação, buscando clareza para decidir como agir.",
+      "questions": [
+        "Qual é a energia real do relacionamento?",
+        "O que está escondido por trás das palavras e gestos?",
+        "Ele(a) sente o que diz ou só finge?",
+        "Como a outra pessoa realmente se posiciona em relação a você?",
+        "Tem alguma manipulação, mentira ou segredo que você precisa saber?",
+        "Devo sair dessa relação?"
+      ],
+      "tag": "",
+      "featured": false
+    },
+    {
+      "id": "meu-relacionamento",
+      "name": "Meu Relacionamento",
+      "category": "amor",
+      "price": 107,
+      "summary": "Uma análise completa do vínculo amoroso.",
+      "description": "Uma leitura para quem quer entender seu relacionamento sem máscaras: a energia entre vocês, o que pode estar oculto, os sentimentos e a tendência dos caminhos.",
+      "questions": [
+        "Qual a energia do relacionamento?",
+        "O que está escondido?",
+        "Como a outra pessoa está em relação a você?",
+        "O que você sente de verdade?",
+        "O que o baralho te aconselha?",
+        "Qual é o destino da relação?"
+      ],
+      "tag": "",
+      "featured": false
+    },
+    {
+      "id": "mapa-amoroso",
+      "name": "Mapa Amoroso",
+      "category": "amor",
+      "price": 110,
+      "summary": "Um panorama do momento afetivo e dos próximos caminhos.",
+      "description": "Leitura completa direcionada a compreender o momento amoroso, as energias atuais, os pontos de atenção e as possibilidades de novos relacionamentos.",
+      "questions": [
+        "Possibilidade de alguém novo entrar na sua vida a curto prazo (até 6 meses)",
+        "Como você está energeticamente para viver um novo amor",
+        "Se um relacionamento agora tende a ser positivo para você",
+        "Pontos da sua vida amorosa que precisam de mais atenção",
+        "Tendências a longo prazo (até 1 ano)",
+        "Conselho final para te guiar neste momento"
+      ],
+      "tag": "",
+      "featured": false
+    },
+    {
+      "id": "feridas-amorosas",
+      "name": "Feridas Amorosas",
+      "category": "amor",
+      "price": 115,
+      "summary": "Olhe para os padrões e feridas do seu coração.",
+      "description": "Leitura voltada para o autoconhecimento afetivo. Olhamos para o presente, o passado amoroso, os desejos e as possibilidades de transformação nesse campo.",
+      "questions": [
+        "Como está meu coração agora?",
+        "O que do meu passado amoroso ainda me influencia?",
+        "Que ferida dentro de mim ainda precisa ser curada?",
+        "O que eu realmente desejo — mesmo que eu não admita?",
+        "O que o destino está tentando me mostrar sobre o amor?",
+        "O que eu posso fazer para liberar meu caminho afetivo?"
+      ],
+      "tag": "",
+      "featured": true
+    },
+    {
+      "id": "meu-pataco",
+      "name": "Meu Pataco",
+      "category": "financeiro",
+      "price": 50,
+      "summary": "Entenda a energia do seu campo financeiro.",
+      "description": "Um método para quem quer abrir caminhos financeiros e alinhar a energia à prosperidade.",
+      "questions": [
+        "Como está a energia do meu campo financeiro?",
+        "O que está bloqueando minha prosperidade?",
+        "O que posso fazer para abrir meus caminhos com o dinheiro?"
+      ],
+      "tag": "",
+      "featured": false
+    },
+    {
+      "id": "tiragem-financeira",
+      "name": "Tiragem Completa Financeira",
+      "category": "financeiro",
+      "price": 147,
+      "summary": "Um mergulho em bloqueios, oportunidades e prosperidade.",
+      "description": "Análise da energia do dinheiro, possíveis bloqueios, oportunidades e direcionamentos para ter uma relação mais consciente com a prosperidade.",
+      "questions": [
+        "Qual é a energia atual do meu financeiro?",
+        "Tem dinheiro chegando para mim?",
+        "Tem algo travando ou sugando meu dinheiro?",
+        "O que posso fazer para destravar meu campo financeiro?",
+        "Onde vale mais a pena eu investir minha energia agora?",
+        "Como está minha conexão com a prosperidade?",
+        "Conselho da espiritualidade para o meu financeiro."
+      ],
+      "tag": "",
+      "featured": false,
+      "crossCategory": [
+        "completas"
+      ]
+    },
+    {
+      "id": "quem-sou-eu",
+      "name": "Quem Sou Eu?",
+      "category": "autoconhecimento",
+      "price": 47,
+      "summary": "Reconexão com sua essência e seu momento atual.",
+      "description": "Para quem quer se reconectar consigo mesmo e entender melhor sua própria energia.",
+      "questions": [
+        "Qual energia estou vibrando neste momento?",
+        "O que a espiritualidade quer que eu entenda sobre mim agora?",
+        "Qual conselho o baralho me traz para meu autoconhecimento?"
+      ],
+      "tag": "",
+      "featured": false
+    },
+    {
+      "id": "vidas-passadas",
+      "name": "Vidas Passadas (Acessíveis)",
+      "category": "autoconhecimento",
+      "price": 50,
+      "summary": "Reflexões espirituais e simbólicas sobre outras jornadas.",
+      "description": "Uma leitura espiritual para quem sente que carrega algo que não vem só desta vida. A leitura convida a refletir sobre significados simbólicos e aprendizados.",
+      "questions": [
+        "Quem eu era na minha vida passada?",
+        "Qual aprendizado daquela vida eu ainda carrego hoje?",
+        "Qual conselho espiritual para eu integrar essa memória e seguir leve?"
+      ],
+      "tag": "",
+      "featured": false
+    },
+    {
+      "id": "destravando",
+      "name": "Destravando",
+      "category": "autoconhecimento",
+      "price": 50,
+      "summary": "Entenda o que está travando seus caminhos.",
+      "description": "Uma tiragem para identificar o que está bloqueando os seus caminhos e refletir sobre formas de melhorar essa energia.",
+      "questions": [
+        "O que está travando seus caminhos neste momento?",
+        "Essa trava é passageira ou tende a permanecer?",
+        "O que você pode fazer para melhorar essa situação e destravar seus caminhos?"
+      ],
+      "tag": "",
+      "featured": false,
+      "priceNote": "O anúncio mostra R$50, mas a descrição mostra R$45. Confirmar valor antes de publicar."
+    },
+    {
+      "id": "mapa-do-ser",
+      "name": "Mapa do Ser",
+      "category": "autoconhecimento",
+      "price": 77,
+      "summary": "Olhe para seus pensamentos, emoções e atitudes.",
+      "description": "Uma leitura para compreender o estado da mente, dos sentimentos, os fatores que influenciam o comportamento e o direcionamento para o momento.",
+      "questions": [
+        "Como estão seus pensamentos e sua mente neste momento?",
+        "Como estão seus sentimentos e emoções?",
+        "O que está influenciando seu comportamento e suas atitudes?",
+        "Qual o principal direcionamento para seu momento atual?"
+      ],
+      "tag": "",
+      "featured": false
+    },
+    {
+      "id": "me-inventaram",
+      "name": "Me Inventaram ou Me Apaguei?",
+      "category": "autoconhecimento",
+      "price": 77,
+      "summary": "Redescubra quem você é por trás das expectativas.",
+      "description": "Uma tiragem profunda de autoconhecimento para entender quem você é hoje, o que pode ter te afastado de sua essência e o que precisa ser resgatado.",
+      "questions": [
+        "O que fez você se afastar de quem realmente é?",
+        "Quais influências externas estão afetando sua identidade?",
+        "Quais partes de você estão sendo reprimidas ou escondidas?",
+        "O que você precisa fazer para se reconectar com sua verdadeira essência?"
+      ],
+      "tag": "",
+      "featured": false
+    },
+    {
+      "id": "correntes",
+      "name": "Quebrando Correntes",
+      "category": "autoconhecimento",
+      "price": 97,
+      "summary": "Liberte-se de padrões que parecem se repetir.",
+      "description": "Uma leitura firme para quem cansou de andar em círculos e quer entender o que precisa ser deixado para trás, quais padrões se repetem e como seguir com mais leveza.",
+      "questions": [
+        "O que eu preciso deixar pra trás?",
+        "O que tá me impedindo de soltar isso?",
+        "Como seguir em frente com leveza?",
+        "Que energia ou influência eu devo evitar?",
+        "Que energia ou influência eu devo aceitar?"
+      ],
+      "tag": "",
+      "featured": false
+    },
+    {
+      "id": "essencia",
+      "name": "Chave da Essência",
+      "category": "autoconhecimento",
+      "price": 97,
+      "summary": "Encontre direção para seu crescimento pessoal.",
+      "description": "Leitura profunda sobre autoconhecimento, cura interior e alinhamento com a própria essência, voltada a compreender o que precisa ser trabalhado e o que está pronto para florescer.",
+      "questions": [
+        "Onde preciso direcionar minha energia?",
+        "Em que preciso evoluir por completo?",
+        "Quais antigos padrões devo evitar?",
+        "O que me guiará rumo ao melhor destino?",
+        "O que deve florescer em mim desta vez?"
+      ],
+      "tag": "",
+      "featured": false
+    },
+    {
+      "id": "guia",
+      "name": "O Meu Guia Espiritual",
+      "category": "espiritualidade",
+      "price": 85,
+      "summary": "Direcionamentos sobre sua conexão espiritual.",
+      "description": "Uma leitura de orientação para refletir sobre a proximidade simbólica dos seus guias e as mensagens que podem surgir por meio das cartas.",
+      "questions": [
+        "O meu guia está próximo de mim?",
+        "Que mensagem ele quer passar para mim?",
+        "O que ele pretende me ensinar agora?",
+        "Qual a melhor forma de me conectar com ele?",
+        "Conselho espiritual"
+      ],
+      "tag": "",
+      "featured": false
+    },
+    {
+      "id": "codigo",
+      "name": "Código Natalício",
+      "category": "numerologia",
+      "price": 45,
+      "summary": "Uma leitura da sua essência a partir da data de nascimento.",
+      "description": "Uma análise numerológica da sua essência, padrões, pontos fortes, desafios e modos de sentir e agir.",
+      "questions": [],
+      "tag": "",
+      "featured": false,
+      "requiresDob": true,
+      "priceNote": "O anúncio mostra R$45, mas a descrição mostra R$35. Confirmar antes de publicar."
+    },
+    {
+      "id": "num-prof",
+      "name": "Numerologia Profissional",
+      "category": "numerologia",
+      "price": 57,
+      "summary": "Talentos, caminhos favoráveis e trabalho.",
+      "description": "Análise numerológica voltada à vida profissional, revelando talentos naturais, áreas favoráveis de atuação e caminhos de crescimento.",
+      "questions": [
+        "Talentos naturais — habilidades e dons que podem ser utilizados no trabalho",
+        "Caminhos profissionais favoráveis — áreas e direções de crescimento",
+        "Direcionamento para prosperidade — escolhas para evoluir profissionalmente"
+      ],
+      "tag": "",
+      "featured": false,
+      "requiresDob": true
+    },
+    {
+      "id": "desafios-vida",
+      "name": "Desafios da Vida",
+      "category": "numerologia",
+      "price": 57,
+      "summary": "Compreenda desafios e padrões de repetição.",
+      "description": "Análise numerológica focada em obstáculos e desafios pessoais, mostrando o que pode estar dificultando o crescimento.",
+      "questions": [
+        "Desafios de vida — principais obstáculos da jornada",
+        "Padrões e bloqueios — repetições que podem impedir o crescimento",
+        "Direcionamento de superação — maneiras de lidar com os desafios"
+      ],
+      "tag": "",
+      "featured": false,
+      "requiresDob": true
+    },
+    {
+      "id": "num-acessivel",
+      "name": "Numerologia Cabalística Acessível",
+      "category": "numerologia",
+      "price": 70,
+      "summary": "Os quatro números principais da sua jornada.",
+      "description": "Leitura dos principais números que representam personalidade, missão e caminho de vida.",
+      "questions": [
+        "Número de Destino — o caminho, aprendizados e oportunidades",
+        "Número de Missão — propósito espiritual e dons",
+        "Número de Expressão — talentos e habilidades naturais",
+        "Número de Impressão — como as pessoas te enxergam"
+      ],
+      "tag": "",
+      "featured": false,
+      "requiresDob": true
+    },
+    {
+      "id": "ciclos-vida",
+      "name": "Ciclos da Vida",
+      "category": "numerologia",
+      "price": 97,
+      "summary": "As fases de formação, ação e colheita.",
+      "description": "Análise numerológica sobre os ciclos importantes da vida, mostrando momentos associados a aprendizado, movimento e resultados.",
+      "questions": [
+        "Ciclo de Formação — aprendizado e desenvolvimento",
+        "Ciclo de Ação — movimento, decisões e crescimento",
+        "Ciclo de Colheita — resultados e amadurecimento"
+      ],
+      "tag": "",
+      "featured": false,
+      "requiresDob": true
+    },
+    {
+      "id": "num-completa",
+      "name": "Numerologia Cabalística Completa",
+      "category": "numerologia",
+      "price": 290,
+      "summary": "Um mapa aprofundado da sua trajetória e vibração.",
+      "description": "Leitura detalhada a partir do nome e da data de nascimento sobre vibração interna, padrões emocionais, desafios, missão e destino.",
+      "questions": [
+        "Alma — quem você é por dentro",
+        "Personalidade — como se apresenta ao mundo",
+        "Expressão — características e talentos",
+        "Destino — caminhos e direcionamento",
+        "Missão — propósito",
+        "Desafios a superar",
+        "Lições e dívidas kármicas",
+        "Áreas profissionais favoráveis"
+      ],
+      "tag": "",
+      "featured": true,
+      "requiresDob": true
+    },
+    {
+      "id": "tiragem-completa",
+      "name": "Tiragem Completa",
+      "category": "completas",
+      "price": 100,
+      "summary": "Orientação sobre as diferentes áreas da sua vida.",
+      "description": "Uma leitura ampla sobre os caminhos essenciais, para quem busca clareza e direcionamento em várias áreas da vida.",
+      "questions": [
+        "Caminhos amorosos",
+        "Caminhos financeiros",
+        "Caminho espiritual",
+        "Caminho profissional",
+        "Conselho final"
+      ],
+      "tag": "",
+      "featured": true
+    },
+    {
+      "id": "roda",
+      "name": "Roda do Conselho",
+      "category": "completas",
+      "price": 160,
+      "summary": "Conselhos do Oráculo das Fadas para diferentes áreas.",
+      "description": "Uma tiragem completa onde cada setor da sua vida recebe direcionamentos do Oráculo das Fadas, trazendo uma visão geral.",
+      "questions": [
+        "Conselho para os caminhos amorosos",
+        "Conselho para vida financeira",
+        "Conselho para espiritualidade ou conexão interna",
+        "Conselho para os caminhos profissionais",
+        "Conselho para área de estudos",
+        "Conselho para vida social"
+      ],
+      "tag": "",
+      "featured": false
+    },
+    {
+      "id": "tiragem-mensal",
+      "name": "Tiragem Mensal",
+      "category": "periodos",
+      "price": 87,
+      "summary": "Uma leitura para compreender o mês que começa.",
+      "description": "Leitura das energias do mês, seus desafios, oportunidades e aprendizados, com conselho espiritual para o novo ciclo.",
+      "questions": [
+        "Qual a energia principal que vai guiar meu mês?",
+        "Qual desafio preciso estar atento(a)?",
+        "Que oportunidade devo aproveitar?",
+        "Como posso me proteger ou evitar problemas?",
+        "O que preciso aprender ou desenvolver neste mês?",
+        "Conselho da espiritualidade"
+      ],
+      "tag": "",
+      "featured": true,
+      "period": "mensal"
+    },
+    {
+      "id": "numerologia-mensal",
+      "name": "Numerologia Mensal",
+      "category": "periodos",
+      "price": 27,
+      "summary": "A energia numerológica que vai reger seu mês.",
+      "description": "Análise numerológica da energia do mês, suas influências, aprendizados e direcionamentos.",
+      "questions": [],
+      "tag": "",
+      "featured": false,
+      "period": "mensal",
+      "requiresDob": true
+    },
+    {
+      "id": "horoscopo-mensal",
+      "name": "Horóscopo Mensal",
+      "category": "periodos",
+      "price": 77,
+      "summary": "Quatro áreas da vida no novo ciclo.",
+      "description": "Leitura mensal das áreas amorosa, financeira, espiritual e profissional ou social, de acordo com a escolha do consulente.",
+      "questions": [
+        "Área amorosa",
+        "Área financeira",
+        "Área espiritual",
+        "Área profissional OU social (escolha do consulente)"
+      ],
+      "tag": "",
+      "featured": false,
+      "period": "mensal",
+      "chooseArea": true
+    },
+    {
+      "id": "mapa-meses",
+      "name": "Mapa dos Meses — 6 meses",
+      "category": "periodos",
+      "price": 150,
+      "summary": "Um panorama dos próximos seis meses da sua vida.",
+      "description": "Oráculo dos Próximos 6 Meses: analisamos as tendências, desafios, oportunidades e direções para o semestre, ajudando a se preparar para escolhas e mudanças.",
+      "questions": [
+        "Área amorosa",
+        "Profissional e trabalho",
+        "Financeiro",
+        "Social e amizades",
+        "Familiar",
+        "Estudos, planos ou projetos",
+        "Conselho e direcionamento para os próximos 6 meses"
+      ],
+      "tag": "",
+      "featured": false,
+      "period": "semestral"
+    },
+    {
+      "id": "num-anual-basica",
+      "name": "Numerologia Anual Básica 2027",
+      "category": "periodos",
+      "price": 25,
+      "summary": "A vibração numerológica do seu próximo ano.",
+      "description": "Leitura da energia numerológica principal que regerá 2027 e os direcionamentos desse período.",
+      "questions": [],
+      "tag": "",
+      "featured": false,
+      "period": "anual",
+      "requiresDob": true
+    },
+    {
+      "id": "num-anual-completa",
+      "name": "Numerologia Anual Completa 2027",
+      "category": "periodos",
+      "price": 145,
+      "summary": "Energia do ano e leitura de cada um dos 12 meses.",
+      "description": "Análise da energia numerológica geral de 2027 e das influências mês a mês.",
+      "questions": [
+        "Energia numerológica de 2027",
+        "Análise dos 12 meses individualmente"
+      ],
+      "tag": "",
+      "featured": false,
+      "period": "anual",
+      "requiresDob": true
+    },
+    {
+      "id": "tiragem-anual-cigano",
+      "name": "Tiragem Anual 2027 — Baralho Cigano",
+      "category": "periodos",
+      "price": 90,
+      "summary": "Cinco pontos para orientar seu ano.",
+      "description": "Leitura anual com cinco questões pelo Baralho Cigano. Os pontos confirmados incluem energia do ano, foco e cuidados; os demais serão detalhados antes do atendimento.",
+      "questions": [
+        "Energia que rege o ano",
+        "Onde colocar o foco",
+        "Cuidados e desafios",
+        "Dois pontos complementares a confirmar"
+      ],
+      "tag": "",
+      "featured": false,
+      "period": "anual",
+      "incomplete": true
+    },
+    {
+      "id": "tiragem-anual-pomba",
+      "name": "Tiragem Anual 2027 — Pomba Gira",
+      "category": "periodos",
+      "price": 120,
+      "summary": "Um olhar direto sobre as energias do ano.",
+      "description": "Leitura anual com cinco questões através do Baralho de Pomba Gira. Os pontos completos serão confirmados antes do atendimento.",
+      "questions": [
+        "Energia que rege o ano",
+        "Onde colocar o foco",
+        "Cuidados e desafios",
+        "Dois pontos complementares a confirmar"
+      ],
+      "tag": "",
+      "featured": false,
+      "period": "anual",
+      "incomplete": true
+    },
+    {
+      "id": "horoscopo-anual",
+      "name": "Horóscopo Anual 2027",
+      "category": "periodos",
+      "price": 100,
+      "summary": "Os caminhos do ano em cinco áreas da vida.",
+      "description": "Análise do ano nas áreas amorosa, financeira, espiritual, social e familiar.",
+      "questions": [
+        "Amoroso",
+        "Financeiro",
+        "Espiritual",
+        "Social",
+        "Familiar"
+      ],
+      "tag": "",
+      "featured": false,
+      "period": "anual"
+    }
+  ],
+  "config": {
+    "businessName": "Miguel | Cartomancia",
+    "whatsappNumber": "",
+    "whatsappShortLink": "https://wa.me/message/JVVSXQTMPWEDM1",
+    "instagramUrl": "",
+    "groupUrl": "https://chat.whatsapp.com/I4atZyoRubB4B96c5U3r0P?s=cl&p=i&mlu=4&ilr=4&iam=2",
+    "pixKey": "550.305.168-83",
+    "pixHolder": "David Miguel Simplicio",
+    "pixBank": "Nubank",
+    "urgent24Price": 37,
+    "sameDayPrice": 47,
+    "urgentCutoffHour": 19,
+    "standardBusinessDays": 3,
+    "year": 2027
+  }
+}
