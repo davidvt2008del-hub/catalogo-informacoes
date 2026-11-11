@@ -923,7 +923,20 @@ function setupEvents(){
  document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('#methodModal').hidden)closeModal();if(!$('#cartDrawer').hidden)closeCart()}});
  const mm=$('#mobileMenu');$('#mobileMenuButton').addEventListener('click',()=>{mm.classList.toggle('open');$('#mobileMenuButton').setAttribute('aria-expanded',mm.classList.contains('open'))});$$('#mobileMenu a').forEach(a=>a.addEventListener('click',()=>{mm.classList.remove('open');$('#mobileMenuButton').setAttribute('aria-expanded','false')}));
 }
-if(METHODS.length){renderTiles();renderMethods();updateCartCount();setupEvents()}else{console.error('O catálogo não foi carregado. Confirme se data.js está presente.')}
+if(METHODS.length){renderTiles();renderMethods();updateCartCount();setupEvents();
+  fetch('https://catalogo-administracao-miguel-shq0.onrender.com/api/public/state',{cache:'no-store'})
+   .then(r=>{if(!r.ok)throw new Error('Catálogo remoto indisponível');return r.json()})
+   .then(state=>{if(!Array.isArray(state.catalog)||!state.config)return;
+       METHODS.splice(0,METHODS.length,...state.catalog);
+       Object.assign(CFG,state.config);
+       cart=cart.filter(entry=>METHODS.some(m=>m.id===entry.id));
+       renderTiles();renderMethods();updateCartCount();
+       const direct=$('#whatsappDirect');
+       if(direct){const link=String(CFG.whatsappShortLink||'');const num=String(CFG.whatsappNumber||'').replace(/\D/g,'');
+         direct.href=/^https:\/\/wa\.me\/message\/[A-Za-z0-9]+$/.test(link)?link:/^\d{12,13}$/.test(num)?'https://wa.me/'+num:'#';}
+       const group=$('#groupLink');if(group)group.href=CFG.groupUrl||'#';
+   }).catch(()=>{});
+}else{console.error('O catálogo não foi carregado. Confirme se data.js está presente.')}
 })();
 
 </script></body>
