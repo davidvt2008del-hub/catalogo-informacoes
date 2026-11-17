@@ -253,22 +253,85 @@ function personCard(p){return '<button class="person" data-act="openchat" data-i
 function playerList(){return title('Os oito perfis','Ninguém pode ver identidades secretas antes do bloqueio.')+'<div class="people">'+['user',...people.map(p=>p.id)].map(id=>{const p=pFor(id);const dead=blocked(id);return '<div class="person" style="'+(dead?'opacity:.54;':'')+'">'+av(id)+'<h3>'+E(p.name)+(id==='user'?' (vc)':'')+'</h3><small>'+E(p.age||'')+' anos · '+E(p.city||'')+'</small><p>'+E(p.bio||'')+'</p><div class="row" style="margin-top:12px"><span class="pill '+(dead?'':'green')+'">'+(dead?'BLOQUEADO':'NO JOGO')+'</span>'+(id!=='user'&&!dead?'<button class="btn secondary sm" data-act="openchat" data-id="'+id+'">Conversar</button>':'')+'</div>'+(dead&&id!=='user'?'<p style="color:var(--gold);font-size:11px">Revelação: '+E(p.secret)+'</p>':'')+'</div>';}).join('')+'</div>';}
 function chats(){const aiBanner=window.CircleAI?.signedIn()?'':'<div class="alert" style="margin-bottom:12px"><strong>Conversas reais com IA</strong><p class="muted">Para os participantes responderem com contexto, conecte a IA. Será necessário entrar numa conta Puter. Há créditos iniciais gratuitos e podem existir cobranças se vc optar por ampliar seu uso.</p><button class="btn sm" data-act="connectai">Conectar inteligência artificial</button></div>';const ids=['grupo',...people.map(p=>p.id)];if(chat!=='grupo'&&blocked(chat)){}let name=chat==='grupo'?'Chat geral':pFor(chat).name;const msgs=(game.chats[chat]||[]).map(m=>'<div class="msg '+(m.by==='user'?'mine':'')+'"><div class="who">'+E(m.by==='circle'?'● CIRCLE':pFor(m.by).name)+'</div><div class="bubble">'+E(m.text)+'</div><div class="hour">'+humanDate(m.at)+'</div></div>').join('');
 return aiBanner+'<div class="chatLayout"><div class="chatList">'+ids.map(id=>{const p=id==='grupo'?{name:'Chat geral',initial:'✳',cls:'me'}:pFor(id);return '<button class="chatContact '+(chat===id?'sel':'')+'" data-act="openchat" data-id="'+id+'">'+(id==='grupo'?'<div class="avatar me">✳</div>':av(id))+'<div><b>'+E(p.name)+'</b><small>'+(id==='grupo'?'Todos os jogadores':(blocked(id)?'Bloqueado · conversa arquivada':'Mensagem privada'))+'</small></div>'+(game.unread[id]?'<span class="unread">'+game.unread[id]+'</span>':'')+'</button>';}).join('')+'</div><div class="chatArea"><div class="chatHead">'+(chat==='grupo'?'<div class="avatar me">✳</div>':av(chat))+'<div><h2>'+E(name)+'</h2><small>'+(chat==='grupo'?'Conversa com todos os participantes':blocked(chat)?'Este jogador foi bloqueado':'Conversa privada · sua estratégia importa')+'</small></div></div><div id="messages" class="messages">'+(msgs||'<div class="muted">Ainda não há mensagens aqui. Que tal começar uma conversa?</div>')+'</div><div class="composeBox"><div class="typing">'+(Object.keys(typingIds).some(id=>chat===id||chat==='grupo')?'● alguém está digitando...':'')+'</div><div class="compose"><textarea id="composer" aria-label="Digite sua mensagem" placeholder="Diga algo ao Circle..." '+(game.gameOver||blocked('user')||blocked(chat)?'disabled':'')+'>'+E(draft)+'</textarea><button class="iconbtn" data-act="mic" aria-label="Ativar comando de voz" title="Ativar comando de voz">'+(listening?'🔴':'🎙️')+'</button><button class="iconbtn send" data-act="send" aria-label="Enviar mensagem" title="Enviar mensagem" '+(game.gameOver||blocked('user')||blocked(chat)?'disabled':'')+'>➤</button></div><div class="hint">Toque no microfone e diga: “Circle, escreve aí: oi, gente!” ou “Circle, enviar”. No iPhone, o navegador pode exigir ativação a cada fala.</div></div></div></div>';}
-function games(){
- let c=dueTask(),done=c&&game.tasks[c.key];
- let copy='<div class="hero"><span class="pill">DINÂMICAS DA TEMPORADA</span><h2>Jogue com cabeça e coração</h2><p>Suas decisões alteram a imagem que os adversários têm de vc. Quarta e sábado são livres. Nos outros dias, as dinâmicas podem render conversas e desconfiança.</p></div>';
- if(game.stage!=='social')copy+='<div class="alert">As avaliações e bloqueios estão acontecendo. As dinâmicas da semana ficam pausadas até a próxima rodada.</div>';
- else if(!c)copy+='<div class="panel"><h2>🌿 Hoje é dia livre</h2><p class="muted">Quarta-feira é reservada ao seu desenvolvimento, sábado à sua gira e domingo às avaliações. Não há prova obrigatória agora.</p></div>';
- else {
-   let form='';
-   if(done)form='<div class="alert success">✓ Resposta registrada: '+E(done.answer)+'</div>'+(done.image?'<img src="'+E(done.image)+'" alt="Seu desenho" style="max-width:100%;border-radius:12px;margin-top:12px">':'');
-   else if(c.type==='quiz')form='<div>'+c.answers.map((a,i)=>'<label style="display:block;margin:9px 0"><input type="radio" name="quiz" value="'+i+'"> '+E(a)+'</label>').join('')+'</div><button class="btn" data-act="task">Enviar resposta</button>';
-   else if(c.type==='poll')form='<label class="label" for="trustchoice">Quem parece mais confiável?</label><select class="field" id="trustchoice"><option value="">Escolha alguém</option>'+people.filter(p=>!blocked(p.id)).map(p=>'<option value="'+p.id+'">'+E(p.name)+'</option>').join('')+'</select><label class="label" for="suschoice">Quem pode ser catfish?</label><select class="field" id="suschoice"><option value="">Escolha alguém</option>'+people.filter(p=>!blocked(p.id)).map(p=>'<option value="'+p.id+'">'+E(p.name)+'</option>').join('')+'</select><button class="btn" style="margin-top:12px" data-act="task">Enviar pesquisa</button>';
-   else if(c.type==='rival'||c.type==='ally')form='<label class="label" for="personchoice">Selecione o jogador</label><select class="field" id="personchoice"><option value="">Escolha alguém</option>'+people.filter(p=>!blocked(p.id)).map(p=>'<option value="'+p.id+'">'+E(p.name)+'</option>').join('')+'</select><textarea class="field answer" id="taskanswer" maxlength="450" style="margin-top:10px" placeholder="Por que vc escolheu essa pessoa?"></textarea><button class="btn" style="margin-top:10px" data-act="task">Confirmar escolha</button>';
-   else if(c.title==='Pintando Verdades')form='<p class="muted">Desenhe com o dedo na tela do celular ou com o mouse.</p><canvas id="paintboard" class="draw" width="700" height="350" aria-label="Quadro de pintura"></canvas><button class="btn secondary sm" style="margin:9px 0" data-act="clearpaint">Apagar desenho</button><textarea class="field answer" id="taskanswer" maxlength="450" placeholder="Legenda do seu desenho (opcional)"></textarea><button class="btn" style="margin-top:10px" data-act="task">Publicar desenho</button>';
-   else form='<textarea class="field answer" id="taskanswer" maxlength="650" placeholder="Sua resposta vai influenciar as relações dentro do Circle..."></textarea><button class="btn" style="margin-top:10px" data-act="task">Publicar no Circle</button>';
-   copy+='<div class="challenge"><span class="pill">SEMANA '+game.week+' · '+dayName(currentDay())+'</span><h3>'+E(c.title)+'</h3><p>'+E(c.desc)+'</p>'+form+'</div>';
+
+function opts(players,chosen='',placeholder='Escolha alguém'){
+ return '<option value="">'+E(placeholder)+'</option>'+players.map(id=>'<option value="'+E(id)+'" '+(id===chosen?'selected':'')+'>'+E(pFor(id).name)+'</option>').join('');
+}
+function dynForm(c){
+ const ids=alive().filter(id=>id!=='user');
+ const target='<label class="label" for="dyn-target">Escolha um participante</label><select class="field" id="dyn-target">'+opts(ids)+'</select>';
+ const reason='<label class="label" for="taskanswer">'+(c.type==='painting'?'O que sua pintura quer dizer? (opcional)':'Sua explicação (opcional)')+'</label><textarea class="field answer" id="taskanswer" maxlength="650" placeholder="Escreva com suas palavras..."></textarea>';
+ const send='<button class="btn" style="margin-top:12px" data-act="task">Enviar participação ao Circle</button>';
+ let inner='';
+ if(c.type==='zodiac')inner=target+'<label class="label" for="dyn-sign">Qual signo vc acha que ele(a) é?</label><select class="field" id="dyn-sign"><option value="">Escolha um signo</option>'+CircleDynamics.signs.map(n=>'<option value="'+E(n)+'">'+E(n)+'</option>').join('')+'</select>'+reason;
+ else if(c.type==='poll')inner='<label class="label" for="trustchoice">Quem parece ser mais confiável?</label><select class="field" id="trustchoice">'+opts(alive().filter(x=>x!=='user'))+'</select><label class="label" for="suschoice">Quem pode ser catfish?</label><select class="field" id="suschoice">'+opts(alive().filter(x=>x!=='user'))+'</select><div class="dyn-note">Os votos serão anônimos. O Circle vai divulgar os totais, mas não revelar os votos individuais.</div>';
+ else if(c.type==='quiz')inner=CircleDynamics.quiz.map((q,i)=>'<fieldset class="dyn-field"><legend><b>'+(i+1)+'. '+E(q.q)+'</b></legend>'+q.opts.map((opt,j)=>'<label class="dyn-option"><input type="radio" name="q'+i+'" value="'+j+'"> '+E(opt)+'</label>').join('')+'</fieldset>').join('');
+ else if(c.type==='quote'){
+  const has=!!game.questionSets?.[c.key];
+  const qs=CircleDynamics.context(game,people,c,rand)||[];
+  if(!has)save();
+  inner=qs.map((q,i)=>'<fieldset class="dyn-field"><legend><b>Depoimento '+(i+1)+':</b> '+E(q.text)+'</legend><label class="label" for="quote'+i+'">Quem escreveu?</label><select class="field" id="quote'+i+'">'+opts(q.options)+'</select></fieldset>').join('');
  }
- copy+=title('Jogos da temporada','Versões para celular, sem aparelho de dança')+'<div class="gameGrid">'+CHALLENGES.map(g=>'<div class="gameChip"><strong>'+E(g.title)+'</strong><small>'+E(g.desc)+'</small></div>').join('')+'</div>';
+ else if(c.type==='painting')inner=target+'<p class="muted">Desenhe com o dedo no quadro branco. Os outros jogadores também vão entregar seus desenhos simbólicos sobre alguém.</p><canvas class="draw" id="paintboard" width="700" height="350" aria-label="Quadro de pintura"></canvas><button class="btn secondary sm" style="margin:10px 0" data-act="clearpaint">Apagar minha pintura</button>'+reason;
+ else if(c.type==='rival'||c.type==='ally')inner=target+reason;
+ else if(c.type==='bomb')inner=target+'<label class="label" for="taskanswer">Que pergunta anônima vc quer fazer?</label><textarea class="field answer" id="taskanswer" maxlength="350" placeholder="Escreva uma pergunta objetiva..."></textarea>';
+ else if(c.type==='dance')inner=target+'<label class="label" for="dyn-style">Escolha um ritmo que combina com essa pessoa</label><select class="field" id="dyn-style"><option value="">Escolha um estilo</option>'+CircleDynamics.styles.map(n=>'<option value="'+E(n)+'">'+E(n)+'</option>').join('')+'</select>'+reason;
+ else if(c.type==='party')inner='<label class="label" for="taskanswer">Descreva seu look da festa</label><textarea class="field answer" id="taskanswer" maxlength="450" placeholder="Ex.: camisa rosa, calça branca, acessórios prateados..."></textarea><label class="label" for="dyn-song">Música para começar a festa</label><input class="field" id="dyn-song" maxlength="85" placeholder="Nome de uma música ou estilo">';
+ else if(c.type==='confession')inner='<label class="label" for="taskanswer">Sua confissão anônima</label><textarea class="field answer" id="taskanswer" maxlength="450" placeholder="Algo sobre vc que ninguém imagina..."></textarea><div class="dyn-note">A autoria não será exibida para os outros jogadores.</div>';
+ else inner='<label class="label" for="taskanswer">Sua resposta à dinâmica</label><textarea class="field answer" id="taskanswer" maxlength="600" placeholder="Conta algo verdadeiro sobre vc..."></textarea>';
+ return '<div class="challenge"><span class="pill">SEMANA '+game.week+' · '+dayName(currentDay())+'</span><h3>'+E(c.title)+'</h3><p>'+E(c.desc)+'</p><div class="dyn-note">Etapas: sua participação → respostas dos outros jogadores → apuração → resultado → reações.</div>'+inner+send+'</div>';
+}
+function dynCard(d){
+ const status=({collecting:'Recebendo participações',results:'Resultados disponíveis',discussion:'Reações liberadas',complete:'Concluída'})[d.stage]||d.stage;
+ return '<button class="dyn-archive" data-act="dynopen" data-id="'+E(d.key)+'"><span>'+E(d.title)+'</span><small>'+E(status)+' · semana '+E(d.key.split('-')[0])+'</small></button>';
+}
+function dynResults(d){
+ const rows=d.entries||[];
+ let charts='';
+ for(const section of d.sections||[]){
+  charts+='<div class="dyn-section"><h3>'+E(section.title)+'</h3>';
+  if(section.type==='bars'){const max=Math.max(1,...(section.rows||[]).map(r=>r.count||0));charts+=(section.rows||[]).map(r=>'<div class="dyn-bars"><div class="spread"><b>'+E(r.label)+'</b><span>'+r.count+' voto(s)</span></div><div class="bar"><div style="width:'+Math.round(100*r.count/max)+'%"></div></div></div>').join('');}
+  else if(section.type==='scores')charts+=(section.rows||[]).map((r,i)=>'<div class="stat"><span>'+Number(i+1)+'º '+E(r.name)+'</span><b>'+r.points+' ponto(s)</b></div>').join('');
+  else if(section.type==='notes')charts+=(section.rows||[]).map(r=>'<div class="stat"><span>'+E(r.label)+'</span><b>'+E(r.detail)+'</b></div>').join('');
+  else charts+='<p class="muted">'+E(section.text)+'</p>';
+  charts+='</div>';
+ }
+ const secret=['poll','rival','ally'].includes(d.kind);
+ const hiddenAnon=['confession','bomb'].includes(d.kind);
+ let entries=rows;
+ if(secret)entries=rows.filter(x=>x.by==='user');
+ if(d.kind==='quote')entries=[];
+ let cards=entries.length?'<div class="dyn-section"><h3>'+(hiddenAnon?'Participações anônimas':'O que cada pessoa apresentou')+'</h3><div class="dyn-entries">'+entries.map((e,k)=>{
+  let who=hiddenAnon?'Participante anônimo '+(k+1):e.by==='user'?game.player.alias:e.by==='circle'?'Circle':pFor(e.by).name;
+  const picture=e.image?'<img class="dyn-art-photo" alt="Desenho enviado por vc" src="'+E(e.image)+'">':'';
+  const icon=e.symbol?'<div class="dyn-art-symbol">'+E(e.symbol)+'</div>':'';
+  return '<article class="dyn-entry">'+(!hiddenAnon?'<div class="row">'+av(e.by)+'<strong>'+E(who)+'</strong></div>':'<strong>'+E(who)+'</strong>')+'<p>'+E(e.detail||'Participação registrada')+'</p>'+picture+icon+'</article>';
+ }).join('')+'</div></div>':'';
+ if(d.kind==='poll')cards='<div class="dyn-note">Seu voto: '+E(d.entries[0]?.detail||'Registrado')+'. Os outros votos são secretos; os números abaixo já incluem os oito participantes.</div>';
+ if(d.kind==='rival'||d.kind==='ally')cards='<div class="dyn-note">Sua escolha: '+E(d.entries[0]?.detail||'Registrada')+'. As escolhas individuais dos outros participantes são sigilosas.</div>';
+ let base='<div class="dyn-results"><div class="dyn-headline"><span class="pill">ALERTA! O CIRCLE REVELOU</span><h2>'+E(d.headline)+'</h2><p>'+E(d.summary)+'</p></div>'+cards+charts+'<div class="dyn-note">'+E(d.stake)+'</div>';
+ if(d.stage==='complete')base+='<div class="row"><span class="pill green">✓ Dinâmica concluída</span><button class="btn secondary sm" data-act="nav" data-to="chats">Ver conversas</button></div>';
+ else if(d.stage==='results')base+='<button class="btn" data-act="dynreact" data-id="'+E(d.key)+'">Abrir reações dos jogadores →</button>';
+ else if(d.stage==='discussion')base+='<div class="alert"><strong>Os resultados já chegaram aos chats!</strong><p>As relações e suspeitas foram atualizadas. As reações dos participantes aparecerão no chat geral quando a IA estiver conectada.</p></div><div class="row"><button class="btn secondary" data-act="nav" data-to="chats">Ver chat geral</button><button class="btn" data-act="dynfinish" data-id="'+E(d.key)+'">Concluir dinâmica</button></div>';
+ return base+'</div>';
+}
+function dynActive(d){
+ if(d.stage!=='collecting')return dynResults(d);
+ const elapsed=Math.max(0,Date.now()-d.submittedAt),count=Math.min(7,Math.max(0,Math.floor(elapsed/1500)));
+ const ready=Date.now()>=d.releaseAt;
+ return '<section class="dyn-progress"><span class="pill">CIRCLE · APURAÇÃO</span><h2>Os jogadores estão participando</h2><p class="muted">Sua resposta já foi enviada. O Circle está reunindo as escolhas dos outros sete participantes desta simulação.</p><div class="dyn-progress-track"><div style="width:'+Math.round(100*count/7)+'%"></div></div><div class="spread"><strong>'+count+' de 7 participantes</strong><span>'+(!ready?'Preparando resultados...':'Todas as respostas recebidas')+'</span></div>'+(ready?'<button class="btn" data-act="dynreveal" data-id="'+E(d.key)+'">Revelar resultados do Circle</button>':'<div class="dyn-wait">O resultado será liberado em instantes.</div>')+'</section>';
+}
+function games(){
+ const current=dueTask();const latest=Object.values(game.dynamics||{}).reverse();
+ let copy='<div class="hero"><span class="pill">TODOS PARTICIPAM</span><h2>Dinâmicas que movimentam o jogo</h2><p>Vc faz sua parte. Os outros jogadores também escolhem, respondem ou desenham. Depois o Circle apura e revela os resultados — e as consequências aparecem nos relacionamentos e no chat.</p></div>';
+ let shown=current;let d=current&&dynState(current);
+ if(openedDynamic){const archive=(game.dynamics||{})[openedDynamic];if(archive){copy+='<button class="btn secondary sm" data-act="dynback">← Voltar aos jogos atuais</button>';copy+=dynActive(archive);copy+=title('Registro das dinâmicas anteriores');copy+='<div class="dyn-archive-list">'+latest.filter(x=>x.key!==openedDynamic).map(dynCard).join('')+'</div>';return copy;}openedDynamic=null;}
+ if(game.stage!=='social')copy+='<div class="alert">Hoje o Circle está na fase de avaliações ou bloqueios. As provas não estão abertas, mas os resultados anteriores continuam disponíveis abaixo.</div>';
+ else if(!current)copy+='<section class="panel"><h2>🌿 Dia livre</h2><p class="muted">Quarta é seu desenvolvimento, sábado é sua gira e domingo é dia de avaliações. Não há uma dinâmica obrigatória agora.</p></section>';
+ else if(d)copy+=dynActive(d);
+ else copy+=dynForm(current);
+ if(latest.length){copy+=title('Histórico das dinâmicas','Resultados anteriores continuam disponíveis');copy+='<div class="dyn-archive-list">'+latest.filter(x=>x.key!==current?.key).map(dynCard).join('')+'</div>';}
+ copy+=title('Agenda completa de jogos','Um jogo diferente por dia de prova')+'<div class="gameGrid">'+CHALLENGES.map((g,i)=>'<div class="gameChip"><strong>'+E(g.title)+'</strong><small>'+E(g.desc)+'</small></div>').join('')+'</div>';
  return copy;
 }
 function ratingView(){const stage=game.stage,base='<div class="hero"><span class="pill">DOMINGO NO CIRCLE</span><h2>Avaliações e eliminações</h2><p>18h — avaliação · 20h — influenciadores · 21h — bloqueio. Os votos dos adversários consideram alianças, relações, estratégias e suspeitas.</p></div>';
