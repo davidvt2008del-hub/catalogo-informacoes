@@ -1,7 +1,7 @@
 /* Circle: Minha Temporada — jogo de simulação social individual */
 (function(){
 'use strict';
-const KEY='circle-solo-v2';
+const KEY='circle-solo-v3';
 const $=id=>document.getElementById(id);
 const E=s=>String(s===undefined||s===null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const normalize=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^\w\s]/g,' ').replace(/\s+/g,' ').trim();
@@ -15,20 +15,20 @@ const people=[
 {id:'gui',name:'Gui',age:24,city:'Fortaleza',job:'Músico',bio:'Meu violão é meu melhor amigo. Sou mais coração do que razão.',cls:'g',initial:'G',style:'descontraido',trueSelf:true,secret:'Gui é músico de Fortaleza, como afirma seu perfil.',traits:{social:75,trust:76,game:31,lie:11},likes:['música','amizade','arte'],avoids:['disputa','agressividade'],opening:['Eita, conversa chegando! Vamo trocar ideia haha','Aí sim! Me conta como tá a experiência nesse lugar maluco?']}
 ];
 const CHALLENGES=[
-{title:'Quem é de qual signo?',desc:'Escolha um jogador e tente adivinhar seu signo. Conte por que ele combina com esse signo.',type:'write'},
-{title:'Pesquisa de Opinião',desc:'Quem parece mais confiável? E quem parece ser um catfish? Justifique sua escolha.',type:'poll'},
-{title:'Jogo da Verdade',desc:'Conte uma verdade sobre vc que ainda não apareceu no seu perfil. Pode aproximar ou afastar pessoas.',type:'write'},
-{title:'Mentes Brilhantes',desc:'Responda: qual é o maior planeta do Sistema Solar?',type:'quiz',answers:['Terra','Saturno','Júpiter','Netuno'],correct:2},
-{title:'Pintando Verdades',desc:'Crie um pequeno retrato simbólico de alguém usando texto e emojis. O desenho pode despertar suspeitas.',type:'write'},
-{title:'Meu Maior Rival',desc:'Escolha o jogador que mais te preocupa neste momento e explique seu motivo.',type:'rival'},
-{title:'A Última Bomba',desc:'Envie uma pergunta anônima que você gostaria de fazer para o grupo.',type:'anon'},
-{title:'Segue o Baile',desc:'Sem aparelho de dança: escolha um estilo musical que combina com alguém do Circle e explique por quê.',type:'write'},
-{title:'Festa do Circle',desc:'Conte como seria seu look e qual música abriria sua festa do Circle.',type:'write'},
-{title:'Quem disse isso?',desc:'Escolha uma frase marcante do grupo. Tente descobrir o que a pessoa realmente quis dizer.',type:'write'},
-{title:'Confissões',desc:'Escreva algo que vc nunca disse a outro jogador. Sua confissão vai para o grupo sem seu nome.',type:'anon'},
-{title:'Compatibilidade',desc:'Quem seria sua dupla ideal para uma prova valendo imunidade? Por quê?',type:'ally'}
+{title:'Quem é de qual signo?',desc:'Os participantes dão palpites sobre signos. O Circle revela o signo do alvo escolhido.',type:'zodiac'},
+{title:'Pesquisa de Opinião',desc:'Todos escolhem o mais confiável e um possível catfish. Votos anônimos, resultados públicos.',type:'poll'},
+{title:'Jogo da Verdade',desc:'Cada participante compartilha uma verdade pessoal e os outros podem reagir.',type:'truth'},
+{title:'Mentes Brilhantes',desc:'Três perguntas, todos jogam e o Circle revela o placar com o gabarito.',type:'quiz'},
+{title:'Pintando Verdades',desc:'Desenhe outro perfil com o dedo. Os demais jogadores também apresentam suas interpretações.',type:'painting'},
+{title:'Meu Maior Rival',desc:'Cada pessoa aponta seu maior rival. O Circle revela quem foi mais citado.',type:'rival'},
+{title:'A Última Bomba',desc:'Perguntas anônimas direcionadas. Cada participante recebe a chance de responder.',type:'bomb'},
+{title:'Segue o Baile',desc:'Escolha um ritmo para alguém e veja as escolhas da casa, sem aparelho de dança.',type:'dance'},
+{title:'Festa do Circle',desc:'Escolha seu look e uma música. O Circle revela as ideias de todo mundo e os destaques.',type:'party'},
+{title:'Quem disse isso?',desc:'Três depoimentos anônimos: descubra quem escreveu cada um e confira o gabarito.',type:'quote'},
+{title:'Confissões',desc:'Todos enviam confissões anônimas para provocar uma conversa no grupo.',type:'confession'},
+{title:'Compatibilidade',desc:'Todos escolhem uma dupla; o Circle protege dois participantes no próximo bloqueio.',type:'ally'}
 ];
-let game=null,view='inicio',chat='grupo',draft='',listening=false,recognition=null,typingIds={},busy=false,toastTimer=null,painting=false;
+let game=null,view='inicio',chat='grupo',draft='',listening=false,recognition=null,typingIds={},busy=false,toastTimer=null,painting=false,painted=false,openedDynamic=null;
 function rand(){game.seed=(Math.imul(1664525,game.seed)+1013904223)>>>0;return game.seed/4294967296;}
 function pick(a){return a[Math.floor(rand()*a.length)];}
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
@@ -42,7 +42,7 @@ function log(text,type){game.events.unshift({id:Date.now()+'-'+Math.floor(rand()
 function message(room,by,text){if(!game.chats[room])game.chats[room]=[];game.chats[room].push({by,text:String(text).slice(0,1200),at:Date.now(),day:game.day,week:game.week});if(game.chats[room].length>190)game.chats[room].shift();if(by!=='user'&&chat!==room)game.unread[room]=(game.unread[room]||0)+1;}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(game));return true;}catch(e){toast('Espaço do navegador cheio. Faça backup no menu Ajustes.');return false;}}
 function valid(g){return g&&g.version===1&&g.player&&typeof g.player.alias==='string'&&g.bots&&g.chats&&g.stage&&Array.isArray(g.blocked)&&Array.isArray(g.events);}
-function start(alias,age,city,bio,mode,job){game={version:1,seed:(Date.now()>>>0)||777,player:{alias:alias.slice(0,26),age:age.slice(0,2),city:city.slice(0,38),job:job.slice(0,40),bio:bio.slice(0,190)},mode:mode==='real'?'real':'livre',created:Date.now(),week:1,day:0,stage:'social',blocked:[],chats:{grupo:[]},events:[],bots:{},unread:{},tasks:{},ballots:[],rankings:[],influencers:[],vote:[],proposed:'',pendingBlock:'',lastRealDay:'',lastRealSunday:'',lastRoundDate:'',winner:'',gameOver:false};
+function start(alias,age,city,bio,mode,job){game={version:1,seed:(Date.now()>>>0)||777,player:{alias:alias.slice(0,26),age:age.slice(0,2),city:city.slice(0,38),job:job.slice(0,40),bio:bio.slice(0,190)},mode:mode==='real'?'real':'livre',created:Date.now(),week:1,day:0,stage:'social',blocked:[],chats:{grupo:[]},events:[],bots:{},unread:{},tasks:{},ballots:[],rankings:[],influencers:[],vote:[],proposed:'',pendingBlock:'',lastRealDay:'',lastRealSunday:'',lastRoundDate:'',winner:'',gameOver:false,dynamics:{},questionSets:{},immunity:null};
 people.forEach(p=>{game.chats[p.id]=[];game.bots[p.id]={trust:Math.round((p.traits.trust-45)*.45+(rand()-.5)*35),suspicion:Math.round(rand()*25),said:[],other:{},memory:[],contacts:0,open:0};people.forEach(x=>{if(x.id!==p.id)game.bots[p.id].other[x.id]=Math.round((rand()-.5)*52);});});
 message('grupo','circle','ALERTA! Bem-vindos ao Circle! Seus perfis estão liberados. Os chats já estão abertos. Boa sorte!');
 log('A temporada começou! Vc entrou com o perfil '+game.player.alias+'.','start');
@@ -91,7 +91,7 @@ function npcReply(room,id,objective,lastUserMessage,delay=2200){
   try{
    if(game!==session||game.gameOver||blocked(id))return;
    const actual=game.chats[room]||[];
-   const last=actual.filter(x=>x.by==='user').at(-1)?.text||lastUserMessage||'';
+   const last=lastUserMessage==='@circle'?'':actual.filter(x=>x.by==='user').at(-1)?.text||lastUserMessage||'';
    const answer=await CircleAI.reply({actor:pFor(id),room,game,people,lastUserMessage:last,objective});
    if(game!==session||game.gameOver||blocked(id))return;
    npcSay(room,id,answer);
@@ -156,55 +156,83 @@ async function connectAI(){
 }
 
 function dueTask(){if(game.stage!=='social')return null;const d=game.mode==='real'?nowSP().weekday===0?6:(nowSP().weekday+6)%7:game.day;if(d===2||d===5||d===6)return null;const idx=(game.week-1)*4+[0,1,0,2,3,0,0][d];const c=CHALLENGES[idx%CHALLENGES.length];const key=game.week+'-'+d;return {key,...c};}
-function nextDay(){if(game.mode!=='livre'||game.stage!=='social')return;if(game.day>=6)return;game.day++;if(game.day===2)log('Quarta-feira: dia livre de desenvolvimento. Nenhuma prova obrigatória.','pause');else if(game.day===5)log('Sábado: dia livre de gira. Nenhuma prova obrigatória.','pause');else if(game.day===6){game.stage='vote';log('ALERTA! Domingo, 18h: as avaliações estão abertas.','alert');message('grupo','circle','ALERTA! São 18h do domingo. É hora de classificar seus colegas do Circle.');}else{initiative();log('Um novo dia começou. A dinâmica está disponível na aba Jogos.','game');}save();render();}
+function nextDay(){if(game.mode!=='livre'||game.stage!=='social')return;if(game.day>=6)return;const current=dueTask();if(current){const state=dynState(current);if(!state||state.stage!=='complete')return toast('Antes de avançar, participe da dinâmica de hoje, veja o resultado e conclua o evento.');}game.day++;openedDynamic=null;if(game.day===2)log('Quarta-feira: dia livre de desenvolvimento. Nenhuma prova obrigatória.','pause');else if(game.day===5)log('Sábado: dia livre de gira. Nenhuma prova obrigatória.','pause');else if(game.day===6){game.stage='vote';log('ALERTA! Domingo, 18h: as avaliações estão abertas.','alert');message('grupo','circle','ALERTA! São 18h do domingo. É hora de classificar seus colegas do Circle.');}else{initiative();log('Um novo dia começou. A dinâmica está disponível na aba Jogos.','game');}save();render();}
 function checkReal(){if(!game||game.mode!=='real'||game.gameOver||game.stage!=='social')return;const t=nowSP();const k=t.date;if(game.lastRealDay!==k){game.lastRealDay=k;if(t.weekday!==3&&t.weekday!==6){initiative();}save();}if(t.weekday===0&&t.hour>=18&&game.lastRealSunday!==k){game.stage='vote';game.lastRealSunday=k;log('São 18h de domingo! As avaliações estão abertas.','alert');message('grupo','circle','ALERTA! Avaliações de domingo liberadas às 18h.');save();render();}}
 function allBotBallots(){const ids=alive();const result={};for(const p of people.filter(p=>!blocked(p.id))){const b=n(p.id);let choices=ids.filter(id=>id!==p.id);const score=id=>{let rel=id==='user'?b.trust:(b.other[id]||0);let target=id==='user'?{traits:{game:53,trust:55}}:pFor(id);let untrust=(id!=='user'&&!target.trueSelf&&p.traits.game>60?8:0);return rel*.72+(100-p.traits.game)*.12*(rel>0?1:-1)+rand()*45+(target.traits?.social||60)*.08-untrust;};const scored=choices.map(id=>({id,points:score(id)}));scored.sort((x,y)=>y.points-x.points);result[p.id]=scored.map(x=>x.id);}return result;}
 function voteSubmit(){if(game.stage!=='vote')return;let order=Array.from(document.querySelectorAll('[data-rank-id]')).map(x=>x.dataset.rankId);if(order.length!==alive().length-1||new Set(order).size!==order.length)return toast('Complete seu ranking antes de enviar.');game.vote=order;const all=allBotBallots();all.user=order;game.ballots.push({week:game.week,all});let scores={};for(const voter of Object.keys(all)){all[voter].forEach((id,i)=>{if(!scores[id])scores[id]={points:0,count:0};scores[id].points+=(all[voter].length-i);scores[id].count++;});}const ranking=alive().map(id=>({id,score:scores[id]?scores[id].points/scores[id].count:0})).sort((a,b)=>b.score-a.score||((a.id>b.id)?1:-1));game.rankings.push({week:game.week,ranking});game.influencers=ranking.slice(0,2).map(x=>x.id);game.stage=game.week===4?'final':'influencers';log('Todas as avaliações foram calculadas. O resultado está guardado.','vote');message('grupo','circle','As avaliações foram encerradas. Os influenciadores serão anunciados às 20h.');save();view='avaliacoes';render();}
 function revealInfluencers(){if(game.stage!=='influencers')return;if(game.mode==='real'&&nowSP().weekday===0&&nowSP().hour<20)return toast('A revelação acontece a partir das 20h.');game.stage='block';log('20h — Influenciadores da semana: '+game.influencers.map(id=>pFor(id).name).join(' e ')+'.','alert');message('grupo','circle','ALERTA! Os influenciadores da semana são '+game.influencers.map(id=>pFor(id).name).join(' e ')+'. A Sala Azul foi aberta.');save();render();}
-function possibleTargets(){return alive().filter(id=>!game.influencers.includes(id));}
+function possibleTargets(){const protectedIds=game.immunity?.week===game.week?(game.immunity.ids||[]):[];const avail=alive().filter(id=>!game.influencers.includes(id));const targetable=avail.filter(id=>!protectedIds.includes(id));return targetable.length?targetable:avail;}
 function botTarget(influencer){const candidates=possibleTargets();const bot=n(influencer);return candidates.map(id=>({id,score:(id==='user'?bot.trust:(bot.other[id]||0))-(id==='user'?bot.suspicion*.3:0)+(rand()-.5)*28})).sort((a,b)=>a.score-b.score)[0]?.id;}
 function executeBlock(){if(game.stage!=='block')return;if(game.mode==='real'&&nowSP().weekday===0&&nowSP().hour<21)return toast('O bloqueio acontece a partir das 21h.');const targets=possibleTargets();if(!targets.length)return;let chosen=game.pendingBlock&&targets.includes(game.pendingBlock)?game.pendingBlock:null;const inf=game.influencers;
 if(inf.includes('user')){const rival=inf.find(id=>id!=='user');const their=botTarget(rival);if(!chosen)return toast('Como influenciador, escolha quem você quer bloquear.');if(chosen!==their&&rand()<.32)chosen=their;}else{const picks=inf.map(botTarget);chosen=picks[0]===picks[1]?picks[0]:(rand()<.5?picks[0]:picks[1]);}
 game.blocked.push(chosen);const p=pFor(chosen);log('21h — '+p.name+' foi bloqueado do Circle!','block');message('grupo','circle','ALERTA! '+p.name+' foi bloqueado. Está fora da disputa.');game.lastBlocked=chosen;game.stage=chosen==='user'?'eliminated':'post';if(chosen==='user'){game.gameOver=true;log('Você foi bloqueado. Sua temporada acabou.','end');}else{const identity=p.trueSelf?'Perfil verdadeiro.':p.secret;log('Revelação de '+p.name+': '+identity,'reveal');}
 save();view='resultado';render();}
-function nextWeek(){if(game.stage!=='post')return;game.week++;game.day=0;game.stage='social';game.vote=[];game.pendingBlock='';game.influencers=[];game.lastRealSunday=game.mode==='real'&&nowSP().weekday===0?nowSP().date:'';if(game.mode==='real'&&nowSP().weekday!==1)game.lastRealDay=nowSP().date;log('Semana '+game.week+' começou. Uma nova rodada de jogos e estratégias!','start');initiative();save();view='inicio';render();}
+function nextWeek(){if(game.stage!=='post')return;game.week++;game.day=0;game.stage='social';game.vote=[];game.pendingBlock='';game.influencers=[];game.immunity=null;game.lastRealSunday=game.mode==='real'&&nowSP().weekday===0?nowSP().date:'';if(game.mode==='real'&&nowSP().weekday!==1)game.lastRealDay=nowSP().date;log('Semana '+game.week+' começou. Uma nova rodada de jogos e estratégias!','start');initiative();save();view='inicio';render();}
 function finish(){if(game.stage!=='final')return;if(game.mode==='real'&&nowSP().weekday===0&&nowSP().hour<21)return toast('O resultado final sai a partir das 21h.');game.winner=game.rankings.at(-1).ranking[0].id;game.gameOver=true;game.stage='done';log('A temporada chegou ao fim. Vencedor: '+pFor(game.winner).name+'.','end');save();view='resultado';render();}
+
+function dynState(c){return c?(game.dynamics||{})[c.key]||null:null;}
+function taskChoice(id){const v=$(id)?.value||'';return String(v).trim();}
+function dynamicCurrent(){return dueTask();}
+function collectDynamicInput(c){
+ const response={};
+ if(['zodiac','painting','rival','dance','ally','bomb'].includes(c.type)){
+  response.target=taskChoice('dyn-target');
+  if(!response.target||!alive().includes(response.target))return {error:'Escolha uma pessoa que ainda está no Circle.'};
+ }
+ if(c.type==='zodiac'){response.sign=taskChoice('dyn-sign');if(!CircleDynamics.signs.includes(response.sign))return {error:'Escolha o signo que vc acha que combina com essa pessoa.'};}
+ if(c.type==='poll'){response.trusted=taskChoice('trustchoice');response.suspect=taskChoice('suschoice');if(!response.trusted||!response.suspect||response.trusted===response.suspect||!alive().includes(response.trusted)||!alive().includes(response.suspect))return {error:'Escolha dois participantes diferentes.'};}
+ if(c.type==='quiz'){response.answers=CircleDynamics.quiz.map((q,i)=>document.querySelector('input[name="q'+i+'"]:checked')?.value);if(response.answers.some(x=>x===undefined))return {error:'Responda às três perguntas.'};}
+ if(c.type==='quote'){const cards=CircleDynamics.context(game,people,c,rand)||[];response.guesses=cards.map((q,i)=>taskChoice('quote'+i));if(response.guesses.length!==3||response.guesses.some((x,i)=>!cards[i].options.includes(x)))return {error:'Escolha o autor das três frases.'};}
+ if(c.type==='dance'){response.style=taskChoice('dyn-style');if(!CircleDynamics.styles.includes(response.style))return {error:'Escolha um estilo musical.'};}
+ if(c.type==='party'){response.song=taskChoice('dyn-song');if(!response.song)return {error:'Escolha uma música para sua festa.'};}
+ if(c.type==='painting'&&!painted)return {error:'Faça seu desenho com o dedo antes de enviar.'};
+ response.text=taskChoice('taskanswer');
+ if(['truth','bomb','confession','party'].includes(c.type)&&response.text.length<5)return {error:'Escreva uma resposta para a dinâmica.'};
+ if(c.type==='bomb'&&!/[?？]/.test(response.text))return {error:'Escreva uma pergunta terminada em ?'};
+ if(c.type==='painting'){
+  const canvas=$('paintboard');try{response.image=canvas.toDataURL('image/jpeg',.52);}catch(e){return {error:'Não foi possível guardar o desenho.'};}
+ }
+ return response;
+}
 function taskSubmit(){
- let c=dueTask();if(!c)return toast('Hoje não há prova obrigatória.');
- if(game.tasks[c.key])return toast('Essa dinâmica já foi concluída.');
- const box=$('taskanswer');let result=box?.value?.trim()||'',drawing=null;
- if(c.type==='quiz')result=document.querySelector('input[name="quiz"]:checked')?.value||'';
- else if(c.type==='poll'){
-   const trusted=$('trustchoice')?.value,suspect=$('suschoice')?.value;
-   if(!trusted||!suspect||trusted===suspect)return toast('Escolha duas pessoas diferentes.');
-   result='Mais confiável: '+pFor(trusted).name+' | Possível catfish: '+pFor(suspect).name;
-   updateTrust(trusted,5,'Vc me considerou confiável na pesquisa.');
-   updateTrust(suspect,-8,'Vc me apontou como possível catfish.');
- }else if(c.type==='rival'||c.type==='ally'){
-   const selected=$('personchoice')?.value;
-   if(!selected)return toast('Escolha um participante primeiro.');
-   result=(c.type==='rival'?'Meu maior rival: ':'Minha dupla ideal: ')+pFor(selected).name+'. '+result;
- }else if(c.title==='Pintando Verdades'){
-   const board=$('paintboard');
-   if(board)try{drawing=board.toDataURL('image/jpeg',.56);}catch(e){}
-   result=result||'Publiquei um desenho simbólico na dinâmica.';
+ const c=dynamicCurrent();if(!c||game.stage!=='social')return toast('Não há dinâmica aberta agora.');
+ if(dynState(c))return toast('Sua participação nesta dinâmica já foi registrada.');
+ if(!window.CircleDynamics)return toast('O motor da prova não carregou. Atualize a página.');
+ const data=collectDynamicInput(c);if(data.error)return toast(data.error);
+ const outcome=CircleDynamics.resolved(game,people,c,data,rand);
+ if(!game.dynamics)game.dynamics={};
+ game.dynamics[c.key]=outcome;
+ game.tasks[c.key]={answer:data.text||data.sign||data.style||data.trusted||'Respostas enviadas',title:c.title,at:Date.now(),image:data.image||''};
+ log('Todos estão participando de "'+c.title+'". Aguarde a apuração.','game');
+ painted=false;save();render();toast('Sua resposta foi enviada. O Circle vai reunir as outras participações.');
+}
+function revealDynamic(key){
+ const d=(game.dynamics||{})[key];if(!d||d.stage!=='collecting')return;
+ if(Date.now()<d.releaseAt)return toast('O Circle ainda está reunindo as respostas.');
+ d.stage='results';d.resultRead=true;
+ message('grupo','circle','ALERTA! Resultado de '+d.title+': '+d.summary+' '+d.stake);
+ log('Resultado divulgado: '+d.headline,'reveal');
+ save();render();
+}
+function reactDynamic(key){
+ const d=(game.dynamics||{})[key];if(!d||d.stage!=='results')return;
+ d.stage='discussion';d.reacted=true;
+ const liveBots=people.filter(p=>!blocked(p.id));
+ if(window.CircleAI?.signedIn()&&liveBots.length){
+  const responders=shuffle(liveBots).slice(0,2);
+  const context='Dinâmica '+d.title+' encerrada. '+d.summary+' '+d.stake+
+   ' Reaja especificamente ao resultado divulgado pelo Circle no grupo, usando sua personalidade e relações. Fale como pessoa comum, não como apresentador. Não repita o comunicado. Se essa votação atingiu seu perfil, reaja com emoção condizente. Esta mensagem não é para o jogador humano e sim para o grupo inteiro.';
+  for(const p of responders)npcReply('grupo',p.id,context,'@circle',2500+Math.floor(rand()*1700));
  }
- if(!String(result).trim())return toast('Preencha sua resposta.');
- game.tasks[c.key]={answer:String(result).slice(0,650),title:c.title,at:Date.now()};
- if(drawing)game.tasks[c.key].image=drawing;
- if(c.type==='quiz'){
-   log(Number(result)===c.correct?'Vc acertou o desafio de Mentes Brilhantes!':'Sua resposta foi registrada. A correta era Júpiter.','game');
- }else{
-   const t=discoverTone(String(result));
-   if(t.other){for(const p of people){if(p.id!==t.other.id){
-     const change=c.type==='rival'?-8:c.type==='ally'?6:Math.round((rand()-.5)*7);
-     n(p.id).other[t.other.id]=Math.min(100,Math.max(-100,(n(p.id).other[t.other.id]||0)+change));
-   }}}
-   log('Sua resposta à dinâmica "'+c.title+'" foi publicada.','game');
-   message('grupo','circle',(c.type==='anon'?'Uma mensagem anônima foi enviada: ':'Dinâmica de '+game.player.alias+': ')+String(result).slice(0,450));
-   if(c.type!=='anon'&&rand()<.7){const bot=pick(people.filter(p=>!blocked(p.id)));if(bot)npcReply('grupo',bot.id,'Reaja de forma natural à última mensagem da dinâmica, sem soar como robô. Se for dia 1, não fale de alianças ou votos.','',3300);}
- }
- save();render();toast('Resposta registrada!');
+ log('As reações foram liberadas no chat geral.','social');
+ save();render();
+}
+function finishDynamic(key){
+ const d=(game.dynamics||{})[key];if(!d||!['results','discussion'].includes(d.stage))return;
+ if(d.stage==='results')reactDynamic(key);
+ d.stage='complete';d.completedAt=Date.now();openedDynamic=null;
+ log('Dinâmica concluída: '+d.title+'. As decisões da casa foram registradas.','game');
+ save();render();toast('Dinâmica concluída! Vc já pode seguir para o próximo dia.');
 }
 function refreshReaction(title){return pick(['Essa dinâmica mostrou muita coisa sobre as pessoas 👀','Genteee, eu tô amando como esse jogo muda a cada prova kkk','Acho que vou ter que repensar minhas alianças depois dessa.','Quem vê de fora não imagina a tensão que dá isso aqui!','Muita informação pra processar, viu? kkkkk']);}
 function av(id,sz){const p=pFor(id);if(id!=='user'&&id!=='grupo'){return '<div class="avatar npcphoto portrait-'+E(id)+'" role="img" aria-label="Retrato fictício de '+E(p.name)+'"></div>';}return '<div class="avatar '+E(p.cls)+'"'+(id==='user'&&game.player.photo?' style="background-image:url('+E(game.player.photo)+')" aria-label="Sua foto de perfil"':'')+'>'+E(p.initial||'?')+'</div>';}
@@ -270,7 +298,12 @@ else if(action==='connectai')connectAI();
 else if(action==='mic')microphone();
 else if(action==='nextday')nextDay();
 else if(action==='task')taskSubmit();
-else if(action==='clearpaint'){const p=$('paintboard');if(p)p.getContext('2d').clearRect(0,0,p.width,p.height);}
+else if(action==='dynreveal')revealDynamic(id);
+else if(action==='dynreact')reactDynamic(id);
+else if(action==='dynfinish')finishDynamic(id);
+else if(action==='dynopen'){openedDynamic=id;view='jogos';render();}
+else if(action==='dynback'){openedDynamic=null;render();}
+else if(action==='clearpaint'){const p=$('paintboard');if(p){p.getContext('2d').clearRect(0,0,p.width,p.height);painted=false;}}
 else if(action==='up'||action==='down'){let ix=game.tempRanking.indexOf(id),j=ix+(action==='up'?-1:1);if(j>=0&&j<game.tempRanking.length){[game.tempRanking[ix],game.tempRanking[j]]=[game.tempRanking[j],game.tempRanking[ix]];save();render();}}
 else if(action==='vote')voteSubmit();
 else if(action==='reveal')revealInfluencers();
@@ -305,7 +338,7 @@ function drawPoint(ev,first){
  const board=ev.target;if(!board||board.id!=='paintboard')return;
  const rect=board.getBoundingClientRect(),x=(ev.clientX-rect.left)*board.width/rect.width,y=(ev.clientY-rect.top)*board.height/rect.height;
  const ctx=board.getContext('2d');ctx.strokeStyle='#4f315e';ctx.lineWidth=5;ctx.lineCap='round';ctx.lineJoin='round';
- if(first){painting=true;ctx.beginPath();ctx.moveTo(x,y);try{board.setPointerCapture(ev.pointerId);}catch(e){}}
+ if(first){painting=true;painted=true;ctx.beginPath();ctx.moveTo(x,y);try{board.setPointerCapture(ev.pointerId);}catch(e){}}
  else if(painting){ctx.lineTo(x,y);ctx.stroke();}
 }
 $('app').addEventListener('pointerdown',e=>drawPoint(e,true));
