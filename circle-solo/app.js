@@ -126,9 +126,43 @@ game.blocked.push(chosen);const p=pFor(chosen);log('21h — '+p.name+' foi bloqu
 save();view='resultado';render();}
 function nextWeek(){if(game.stage!=='post')return;game.week++;game.day=0;game.stage='social';game.vote=[];game.pendingBlock='';game.influencers=[];game.lastRealSunday=game.mode==='real'&&nowSP().weekday===0?nowSP().date:'';if(game.mode==='real'&&nowSP().weekday!==1)game.lastRealDay=nowSP().date;log('Semana '+game.week+' começou. Uma nova rodada de jogos e estratégias!','start');initiative();save();view='inicio';render();}
 function finish(){if(game.stage!=='final')return;if(game.mode==='real'&&nowSP().weekday===0&&nowSP().hour<21)return toast('O resultado final sai a partir das 21h.');game.winner=game.rankings.at(-1).ranking[0].id;game.gameOver=true;game.stage='done';log('A temporada chegou ao fim. Vencedor: '+pFor(game.winner).name+'.','end');save();view='resultado';render();}
-function taskSubmit(){let c=dueTask();if(!c)return toast('Hoje não há prova obrigatória.');if(game.tasks[c.key])return toast('Essa dinâmica já foi concluída.');const box=$('taskanswer');let result=c.type==='quiz'?document.querySelector('input[name="quiz"]:checked')?.value:box?.value.trim();if(result===undefined||result===null||!String(result).trim())return toast('Preencha sua resposta.');game.tasks[c.key]={answer:String(result).slice(0,650),title:c.title,at:Date.now()};if(c.type==='quiz'){result=Number(result);log(result===c.correct?'Vc acertou o desafio de Mentes Brilhantes!':'Sua resposta foi registrada. A correta era Júpiter.','game');}
-else{let t=discoverTone(String(result));if(t.other){for(const p of people){if(p.id!==t.other.id){const change=c.type==='rival'?-8: c.type==='ally'?6:Math.round((rand()-.5)*7);n(p.id).other[t.other.id]=Math.min(100,Math.max(-100,(n(p.id).other[t.other.id]||0)+change));}}}log('Sua resposta à dinâmica "'+c.title+'" foi publicada.','game');message('grupo','circle',(c.type==='anon'?'Uma mensagem anônima foi enviada: ':'Dinâmica de '+game.player.alias+': ')+String(result).slice(0,450));if(c.type!=='anon'&&rand()<.7){const bot=pick(people.filter(p=>!blocked(p.id)));message('grupo',bot.id,refreshReaction(c.title));}}
-save();render();toast('Resposta registrada!');}
+function taskSubmit(){
+ let c=dueTask();if(!c)return toast('Hoje não há prova obrigatória.');
+ if(game.tasks[c.key])return toast('Essa dinâmica já foi concluída.');
+ const box=$('taskanswer');let result=box?.value?.trim()||'',drawing=null;
+ if(c.type==='quiz')result=document.querySelector('input[name="quiz"]:checked')?.value||'';
+ else if(c.type==='poll'){
+   const trusted=$('trustchoice')?.value,suspect=$('suschoice')?.value;
+   if(!trusted||!suspect||trusted===suspect)return toast('Escolha duas pessoas diferentes.');
+   result='Mais confiável: '+pFor(trusted).name+' | Possível catfish: '+pFor(suspect).name;
+   updateTrust(trusted,5,'Vc me considerou confiável na pesquisa.');
+   updateTrust(suspect,-8,'Vc me apontou como possível catfish.');
+ }else if(c.type==='rival'||c.type==='ally'){
+   const selected=$('personchoice')?.value;
+   if(!selected)return toast('Escolha um participante primeiro.');
+   result=(c.type==='rival'?'Meu maior rival: ':'Minha dupla ideal: ')+pFor(selected).name+'. '+result;
+ }else if(c.title==='Pintando Verdades'){
+   const board=$('paintboard');
+   if(board)try{drawing=board.toDataURL('image/jpeg',.56);}catch(e){}
+   result=result||'Publiquei um desenho simbólico na dinâmica.';
+ }
+ if(!String(result).trim())return toast('Preencha sua resposta.');
+ game.tasks[c.key]={answer:String(result).slice(0,650),title:c.title,at:Date.now()};
+ if(drawing)game.tasks[c.key].image=drawing;
+ if(c.type==='quiz'){
+   log(Number(result)===c.correct?'Vc acertou o desafio de Mentes Brilhantes!':'Sua resposta foi registrada. A correta era Júpiter.','game');
+ }else{
+   const t=discoverTone(String(result));
+   if(t.other){for(const p of people){if(p.id!==t.other.id){
+     const change=c.type==='rival'?-8:c.type==='ally'?6:Math.round((rand()-.5)*7);
+     n(p.id).other[t.other.id]=Math.min(100,Math.max(-100,(n(p.id).other[t.other.id]||0)+change));
+   }}}
+   log('Sua resposta à dinâmica "'+c.title+'" foi publicada.','game');
+   message('grupo','circle',(c.type==='anon'?'Uma mensagem anônima foi enviada: ':'Dinâmica de '+game.player.alias+': ')+String(result).slice(0,450));
+   if(c.type!=='anon'&&rand()<.7){const bot=pick(people.filter(p=>!blocked(p.id)));if(bot)message('grupo',bot.id,refreshReaction(c.title));}
+ }
+ save();render();toast('Resposta registrada!');
+}
 function refreshReaction(title){return pick(['Essa dinâmica mostrou muita coisa sobre as pessoas 👀','Genteee, eu tô amando como esse jogo muda a cada prova kkk','Acho que vou ter que repensar minhas alianças depois dessa.','Quem vê de fora não imagina a tensão que dá isso aqui!','Muita informação pra processar, viu? kkkkk']);}
 function av(id,sz){const p=pFor(id);return '<div class="avatar '+E(p.cls)+'"'+(id==='user'&&game.player.photo?' style="background-image:url('+E(game.player.photo)+')" aria-label="Foto de perfil"':'')+'>'+E(p.initial||'?')+'</div>';}
 function eventList(count){return game.events.slice(0,count).map(e=>'<div class="event"><time>SEMANA '+e.week+' · '+humanDate(e.date)+'</time><p>'+E(e.text)+'</p></div>').join('');}
@@ -148,11 +182,24 @@ function personCard(p){return '<button class="person" data-act="openchat" data-i
 function playerList(){return title('Os oito perfis','Ninguém pode ver identidades secretas antes do bloqueio.')+'<div class="people">'+['user',...people.map(p=>p.id)].map(id=>{const p=pFor(id);const dead=blocked(id);return '<div class="person" style="'+(dead?'opacity:.54;':'')+'">'+av(id)+'<h3>'+E(p.name)+(id==='user'?' (vc)':'')+'</h3><small>'+E(p.age||'')+' anos · '+E(p.city||'')+'</small><p>'+E(p.bio||'')+'</p><div class="row" style="margin-top:12px"><span class="pill '+(dead?'':'green')+'">'+(dead?'BLOQUEADO':'NO JOGO')+'</span>'+(id!=='user'&&!dead?'<button class="btn secondary sm" data-act="openchat" data-id="'+id+'">Conversar</button>':'')+'</div>'+(dead&&id!=='user'?'<p style="color:var(--gold);font-size:11px">Revelação: '+E(p.secret)+'</p>':'')+'</div>';}).join('')+'</div>';}
 function chats(){const ids=['grupo',...people.map(p=>p.id)];if(chat!=='grupo'&&blocked(chat)){}let name=chat==='grupo'?'Chat geral':pFor(chat).name;const msgs=(game.chats[chat]||[]).map(m=>'<div class="msg '+(m.by==='user'?'mine':'')+'"><div class="who">'+E(m.by==='circle'?'● CIRCLE':pFor(m.by).name)+'</div><div class="bubble">'+E(m.text)+'</div><div class="hour">'+humanDate(m.at)+'</div></div>').join('');
 return '<div class="chatLayout"><div class="chatList">'+ids.map(id=>{const p=id==='grupo'?{name:'Chat geral',initial:'✳',cls:'me'}:pFor(id);return '<button class="chatContact '+(chat===id?'sel':'')+'" data-act="openchat" data-id="'+id+'"><div class="avatar '+p.cls+'">'+p.initial+'</div><div><b>'+E(p.name)+'</b><small>'+(id==='grupo'?'Todos os jogadores':(blocked(id)?'Bloqueado · conversa arquivada':'Mensagem privada'))+'</small></div>'+(game.unread[id]?'<span class="unread">'+game.unread[id]+'</span>':'')+'</button>';}).join('')+'</div><div class="chatArea"><div class="chatHead">'+(chat==='grupo'?'<div class="avatar me">✳</div>':av(chat))+'<div><h2>'+E(name)+'</h2><small>'+(chat==='grupo'?'Conversa com todos os participantes':blocked(chat)?'Este jogador foi bloqueado':'Conversa privada · sua estratégia importa')+'</small></div></div><div id="messages" class="messages">'+(msgs||'<div class="muted">Ainda não há mensagens aqui. Que tal começar uma conversa?</div>')+'</div><div class="composeBox"><div class="typing">'+(Object.keys(typingIds).some(id=>chat===id||chat==='grupo')?'● alguém está digitando...':'')+'</div><div class="compose"><textarea id="composer" aria-label="Digite sua mensagem" placeholder="Diga algo ao Circle..." '+(game.gameOver||blocked('user')||blocked(chat)?'disabled':'')+'>'+E(draft)+'</textarea><button class="iconbtn" data-act="mic" aria-label="Ativar comando de voz" title="Ativar comando de voz">'+(listening?'🔴':'🎙️')+'</button><button class="iconbtn send" data-act="send" aria-label="Enviar mensagem" title="Enviar mensagem" '+(game.gameOver||blocked('user')||blocked(chat)?'disabled':'')+'>➤</button></div><div class="hint">Toque no microfone e diga: “Circle, escreve aí: oi, gente!” ou “Circle, enviar”. No iPhone, o navegador pode exigir ativação a cada fala.</div></div></div></div>';}
-function games(){let c=dueTask();let done=c&&game.tasks[c.key];let copy='<div class="hero"><span class="pill">DINÂMICAS DA TEMPORADA</span><h2>Jogue com cabeça e coração</h2><p>Suas decisões alteram a imagem que os adversários têm de vc. Quarta e sábado são livres. Nos outros dias, as dinâmicas podem render conversas e desconfiança.</p></div>';
-if(game.stage!=='social')copy+='<div class="alert">As avaliações e bloqueios estão acontecendo. As dinâmicas da semana ficam pausadas até a próxima rodada.</div>';
-else if(!c)copy+='<div class="panel"><h2>🌿 Hoje é dia livre</h2><p class="muted">Quarta-feira é reservada ao seu desenvolvimento, sábado à sua gira e domingo às avaliações. Não há prova obrigatória agora.</p></div>';
-else copy+='<div class="challenge"><span class="pill">SEMANA '+game.week+' · '+dayName(currentDay())+'</span><h3>'+E(c.title)+'</h3><p>'+E(c.desc)+'</p>'+(done?'<div class="alert success">✓ Resposta já registrada: '+E(done.answer)+'</div>':c.type==='quiz'?'<div class="row" style="display:block">'+c.answers.map((a,i)=>'<label style="display:block;margin:9px 0"><input type="radio" name="quiz" value="'+i+'"> '+E(a)+'</label>').join('')+'</div><button class="btn" data-act="task">Enviar resposta</button>':'<textarea class="field answer" id="taskanswer" maxlength="650" placeholder="Sua resposta vai influenciar as relações dentro do Circle..."></textarea><button class="btn" style="margin-top:10px" data-act="task">Publicar no Circle</button>')+'</div>';
-copy+=title('Jogos da temporada','Versões para celular, sem aparelho de dança')+'<div class="gameGrid">'+CHALLENGES.map((g,i)=>'<div class="gameChip"><strong>'+E(g.title)+'</strong><small>'+E(g.desc)+'</small></div>').join('')+'</div>';return copy;}
+function games(){
+ let c=dueTask(),done=c&&game.tasks[c.key];
+ let copy='<div class="hero"><span class="pill">DINÂMICAS DA TEMPORADA</span><h2>Jogue com cabeça e coração</h2><p>Suas decisões alteram a imagem que os adversários têm de vc. Quarta e sábado são livres. Nos outros dias, as dinâmicas podem render conversas e desconfiança.</p></div>';
+ if(game.stage!=='social')copy+='<div class="alert">As avaliações e bloqueios estão acontecendo. As dinâmicas da semana ficam pausadas até a próxima rodada.</div>';
+ else if(!c)copy+='<div class="panel"><h2>🌿 Hoje é dia livre</h2><p class="muted">Quarta-feira é reservada ao seu desenvolvimento, sábado à sua gira e domingo às avaliações. Não há prova obrigatória agora.</p></div>';
+ else {
+   let form='';
+   if(done)form='<div class="alert success">✓ Resposta registrada: '+E(done.answer)+'</div>'+(done.image?'<img src="'+E(done.image)+'" alt="Seu desenho" style="max-width:100%;border-radius:12px;margin-top:12px">':'');
+   else if(c.type==='quiz')form='<div>'+c.answers.map((a,i)=>'<label style="display:block;margin:9px 0"><input type="radio" name="quiz" value="'+i+'"> '+E(a)+'</label>').join('')+'</div><button class="btn" data-act="task">Enviar resposta</button>';
+   else if(c.type==='poll')form='<label class="label" for="trustchoice">Quem parece mais confiável?</label><select class="field" id="trustchoice"><option value="">Escolha alguém</option>'+people.filter(p=>!blocked(p.id)).map(p=>'<option value="'+p.id+'">'+E(p.name)+'</option>').join('')+'</select><label class="label" for="suschoice">Quem pode ser catfish?</label><select class="field" id="suschoice"><option value="">Escolha alguém</option>'+people.filter(p=>!blocked(p.id)).map(p=>'<option value="'+p.id+'">'+E(p.name)+'</option>').join('')+'</select><button class="btn" style="margin-top:12px" data-act="task">Enviar pesquisa</button>';
+   else if(c.type==='rival'||c.type==='ally')form='<label class="label" for="personchoice">Selecione o jogador</label><select class="field" id="personchoice"><option value="">Escolha alguém</option>'+people.filter(p=>!blocked(p.id)).map(p=>'<option value="'+p.id+'">'+E(p.name)+'</option>').join('')+'</select><textarea class="field answer" id="taskanswer" maxlength="450" style="margin-top:10px" placeholder="Por que vc escolheu essa pessoa?"></textarea><button class="btn" style="margin-top:10px" data-act="task">Confirmar escolha</button>';
+   else if(c.title==='Pintando Verdades')form='<p class="muted">Desenhe com o dedo na tela do celular ou com o mouse.</p><canvas id="paintboard" class="draw" width="700" height="350" aria-label="Quadro de pintura"></canvas><button class="btn secondary sm" style="margin:9px 0" data-act="clearpaint">Apagar desenho</button><textarea class="field answer" id="taskanswer" maxlength="450" placeholder="Legenda do seu desenho (opcional)"></textarea><button class="btn" style="margin-top:10px" data-act="task">Publicar desenho</button>';
+   else form='<textarea class="field answer" id="taskanswer" maxlength="650" placeholder="Sua resposta vai influenciar as relações dentro do Circle..."></textarea><button class="btn" style="margin-top:10px" data-act="task">Publicar no Circle</button>';
+   copy+='<div class="challenge"><span class="pill">SEMANA '+game.week+' · '+dayName(currentDay())+'</span><h3>'+E(c.title)+'</h3><p>'+E(c.desc)+'</p>'+form+'</div>';
+ }
+ copy+=title('Jogos da temporada','Versões para celular, sem aparelho de dança')+'<div class="gameGrid">'+CHALLENGES.map(g=>'<div class="gameChip"><strong>'+E(g.title)+'</strong><small>'+E(g.desc)+'</small></div>').join('')+'</div>';
+ return copy;
+}
 function ratingView(){const stage=game.stage,base='<div class="hero"><span class="pill">DOMINGO NO CIRCLE</span><h2>Avaliações e eliminações</h2><p>18h — avaliação · 20h — influenciadores · 21h — bloqueio. Os votos dos adversários consideram alianças, relações, estratégias e suspeitas.</p></div>';
 if(stage==='social')return base+'<div class="panel"><h2>Próxima votação: domingo, 18h</h2><p class="muted">Continue jogando. A ordem das suas amizades pode mudar o resultado da semana.</p>'+(game.mode==='livre'?'<p class="muted">No ritmo livre, avance os dias até domingo para abrir as avaliações.</p>':'')+'</div>';
 if(stage==='vote'){const ids=alive().filter(id=>id!=='user');if(!game.tempRanking||game.tempRanking.length!==ids.length||game.tempRanking.some(id=>!ids.includes(id)))game.tempRanking=shuffle(ids);return base+'<section class="panel"><h2>Faça seu ranking</h2><p class="muted">Coloque no topo os perfis em que vc mais confia. Use as setas para trocar a posição e envie sua avaliação.</p><div id="rankings">'+game.tempRanking.map((id,i)=>'<div class="rankRow" data-rank-id="'+id+'"><div class="pos">'+(i+1)+'º</div>'+av(id)+'<b>'+E(pFor(id).name)+'</b><div class="arrows"><button aria-label="Subir '+E(pFor(id).name)+'" data-act="up" data-id="'+id+'" '+(i===0?'disabled':'')+'>↑</button><button aria-label="Descer '+E(pFor(id).name)+'" data-act="down" data-id="'+id+'" '+(i===ids.length-1?'disabled':'')+'>↓</button></div></div>').join('')+'</div><button class="btn" data-act="vote">Enviar avaliação</button></section>';}
@@ -179,6 +226,7 @@ else if(action==='send')send();
 else if(action==='mic')microphone();
 else if(action==='nextday')nextDay();
 else if(action==='task')taskSubmit();
+else if(action==='clearpaint'){const p=$('paintboard');if(p)p.getContext('2d').clearRect(0,0,p.width,p.height);}
 else if(action==='up'||action==='down'){let ix=game.tempRanking.indexOf(id),j=ix+(action==='up'?-1:1);if(j>=0&&j<game.tempRanking.length){[game.tempRanking[ix],game.tempRanking[j]]=[game.tempRanking[j],game.tempRanking[ix]];save();render();}}
 else if(action==='vote')voteSubmit();
 else if(action==='reveal')revealInfluencers();
@@ -209,6 +257,17 @@ function microphone(){const SR=window.SpeechRecognition||window.webkitSpeechReco
 if(recognition&&listening){recognition.stop();return;}
 try{recognition=new SR();recognition.lang='pt-BR';recognition.interimResults=false;recognition.continuous=false;recognition.maxAlternatives=1;recognition.onstart=()=>{listening=true;render();toast('O Circle está ouvindo. Pode falar!');};recognition.onresult=ev=>{const text=ev.results[ev.results.length-1][0].transcript;parseVoice(text);};recognition.onerror=ev=>{if(ev.error!=='no-speech'&&ev.error!=='aborted')toast('O microfone falhou: '+ev.error+'. Verifique a permissão.');};recognition.onend=()=>{listening=false;recognition=null;if(game)render();};recognition.start();}catch(e){toast('Não foi possível iniciar o microfone. Verifique as permissões do navegador.');}}
 $('app').addEventListener('click',act);
+function drawPoint(ev,first){
+ const board=ev.target;if(!board||board.id!=='paintboard')return;
+ const rect=board.getBoundingClientRect(),x=(ev.clientX-rect.left)*board.width/rect.width,y=(ev.clientY-rect.top)*board.height/rect.height;
+ const ctx=board.getContext('2d');ctx.strokeStyle='#4f315e';ctx.lineWidth=5;ctx.lineCap='round';ctx.lineJoin='round';
+ if(first){painting=true;ctx.beginPath();ctx.moveTo(x,y);try{board.setPointerCapture(ev.pointerId);}catch(e){}}
+ else if(painting){ctx.lineTo(x,y);ctx.stroke();}
+}
+$('app').addEventListener('pointerdown',e=>drawPoint(e,true));
+$('app').addEventListener('pointermove',e=>drawPoint(e,false));
+$('app').addEventListener('pointerup',()=>painting=false);
+$('app').addEventListener('pointercancel',()=>painting=false);
 $('app').addEventListener('input',e=>{if(e.target.id==='composer')draft=e.target.value;});
 $('app').addEventListener('keydown',e=>{if(e.target.id==='composer'&&e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
 $('app').addEventListener('change',e=>{if(e.target.id==='import')uploadBackup(e.target.files[0]);if(e.target.id==='photo')photoChange(e.target.files[0]);if(e.target.id==='blockchoice'&&game){game.pendingBlock=e.target.value;save();}});
