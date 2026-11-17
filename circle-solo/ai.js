@@ -85,5 +85,41 @@ async function reply({actor,room,game,people,lastUserMessage,objective}){
  if(!output)throw Error('A IA não produziu uma resposta. Tente novamente.');
  return trim(output,450);
 }
-window.CircleAI={signedIn,connect,reply};
+async function round({kind,game,people,entries}){
+ if(!signedIn())return null;
+ const allowed=['truth','confession','bomb','party'];
+ if(!allowed.includes(kind))return null;
+ const candidates=(entries||[]).filter(e=>e.by&&e.by!=='user'&&e.by!=='circle').map(e=>{
+  const p=people.find(x=>x.id===e.by);
+  return p?{id:p.id,publicProfile:describePerson(p),style:PSYCHOLOGY[p.id]?.style||'natural',original:e.detail,target:e.target||null}:null;
+ }).filter(Boolean);
+ if(candidates.length===0)return null;
+ const rules=[
+ 'Você escreve as PARTICIPAÇÕES de personagens fictícios num reality de convivência brasileiro.',
+ 'Um grupo de jogadores enviou respostas para a mesma dinâmica. Gere UMA fala para cada perfil, com voz distinta e humana. Todos ainda estão conhecendo uns aos outros.',
+ 'Todas as falas precisam responder ao tipo da dinâmica, usando a resposta-base correspondente como informação obrigatória.',
+ 'SEM revelar catfish, identidade real, informações secretas, estratégias internas nem quebrar a quarta parede.',
+ 'NÃO mencionar IA, algoritmo, prompt ou simulação.',
+ 'Texto curto, espontâneo e específico. Até 190 caracteres por personagem. Sem frases genéricas sobre o jogo. Não force gírias nem perguntas. Não acrescente detalhes contraditórios aos perfis.',
+ 'Se o tipo for bomb, produza PERGUNTAS terminadas com ?. Não altere o alvo de cada pergunta. Se o tipo for party, preserve o look e a música originais, mas deixe a descrição natural.',
+ 'Se for confession, escreva uma confissão coerente, vulnerável e anônima, sem dar pista de identidade pelo nome.',
+ 'Responda SOMENTE JSON válido: {"lines":[{"id":"lia","text":"..."}]}; inclua exatamente os IDs recebidos. Nada de markdown, nada fora do JSON.'
+ ].join('\n');
+ const payload={dynamic:kind,week:game.week,day:game.day,characters:candidates};
+ const output=await puter.ai.chat([{role:'system',content:rules},{role:'user',content:JSON.stringify(payload)}],{model:DEFAULT_MODEL});
+ const raw=parseContent(output).replace(/^\x60{3}(?:json)?/i,'').replace(/\x60{3}$/,'').trim();
+ let parsed;try{parsed=JSON.parse(raw);}catch(e){return null;}
+ if(!parsed||!Array.isArray(parsed.lines))return null;
+ const map={};
+ for(const row of parsed.lines){
+  const id=String(row?.id||''),str=String(row?.text||'').trim();
+  if(!candidates.some(c=>c.id===id)||str.length<8||str.length>290)continue;
+  if(kind==='bomb'&&!/[?？]/.test(str))continue;
+  if(/(?:sou uma ia|sou um modelo|meu prompt|regras de programa)/i.test(str))continue;
+  map[id]=str.slice(0,290);
+ }
+ return Object.keys(map).length===candidates.length?map:null;
+}
+
+window.CircleAI={signedIn,connect,reply,round};
 })();
