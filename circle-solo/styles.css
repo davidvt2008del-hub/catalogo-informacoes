@@ -39,3 +39,43 @@
  .chatHead .avatar{width:36px;height:36px}
  .bubble{font-size:12px}
 }
+
+
+/* Percurso de jogo: participação > apuração > resultado > conversa > consequência */
+.challenge{margin-top:16px}
+.dyn-note{background:#28233e;border:1px solid #68587f;border-radius:12px;padding:12px 14px;font-size:12px;color:#e9ddec;line-height:1.65;margin:13px 0}
+.dyn-field{border:1px solid #655d7c;border-radius:14px;padding:13px 15px;margin:11px 0}
+.dyn-field legend{padding:0 7px;font-size:13px;line-height:1.6}
+.dyn-option{display:block;font-size:13px;padding:7px 4px}
+.dyn-option input{accent-color:#ff9dca;margin-right:7px}
+.dyn-progress,.dyn-results{padding:22px;background:linear-gradient(150deg,#241f3e,#192b44);border:1px solid #68527e;border-radius:20px;margin:15px 0}
+.dyn-progress h2,.dyn-results h2{font-size:23px;margin:15px 0 12px;line-height:1.3}
+.dyn-progress p{max-width:650px}
+.dyn-progress-track{margin:22px 0 12px;height:15px;background:#1b172a;border-radius:99px;overflow:hidden;border:1px solid #745a90}
+.dyn-progress-track>div{height:100%;background:linear-gradient(90deg,#ed91b4,#ac99ff);transition:width .75s}
+.dyn-progress .spread{margin:0 0 20px;color:#d8cbe8;font-size:11px}
+.dyn-wait{color:#dbb7da;font-size:12px;margin-top:20px}
+.dyn-headline{padding:20px;margin-bottom:16px;background:linear-gradient(115deg,#51335a,#373063);border-radius:17px;border:1px solid #876499}
+.dyn-headline h2{font-size:23px;margin:12px 0}
+.dyn-headline p{color:#eee0fb;line-height:1.75;font-size:13px}
+.dyn-section{margin:18px 0;padding:16px;border:1px solid #525173;background:#222a43;border-radius:17px}
+.dyn-section h3{font-size:16px;color:#f2d5fa;margin:0 0 12px}
+.dyn-bars{margin:12px 0}
+.dyn-bars .spread{font-size:12px;margin-bottom:5px}
+.dyn-bars .spread span{color:#c7b0d6}
+.dyn-bars .bar{height:13px;background:#151c2d;border:1px solid #505175}
+.dyn-bars .bar>div{border-radius:20px}
+.dyn-entries{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:9px}
+.dyn-entry{border:1px solid #474f71;padding:12px;border-radius:13px;background:#1c233c;min-width:0}
+.dyn-entry .row{gap:10px}
+.dyn-entry .avatar{width:37px;height:37px}
+.dyn-entry strong{font-size:12px}
+.dyn-entry p{font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.7;color:#eaebff}
+.dyn-art-photo{display:block;max-width:100%;height:auto;margin-top:7px;background:white;border-radius:10px}
+.dyn-art-symbol{border-radius:12px;padding:22px 10px;text-align:center;background:linear-gradient(45deg,#d5a0ec,#c3d2f7);font-size:49px}
+.dyn-archive-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:9px;margin-top:12px}
+.dyn-archive{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:12px 14px;border-radius:13px;border:1px solid #55516e;background:#292941;text-align:left}
+.dyn-archive span{font-size:13px;font-weight:800}
+.dyn-archive small{font-size:10px;color:#c3b0d4}
+.dyn-archive:hover{background:#3c3158;border-color:#b48cba}
+@media(max-width:680px){.dyn-progress,.dyn-results{padding:13px;margin-top:10px}.dyn-progress h2,.dyn-results h2{font-size:20px}.dyn-entries{grid-template-columns:1fr}.dyn-section{padding:12px}.dyn-headline{padding:14px}.dyn-headline h2{font-size:20px}.dyn-archive-list{grid-template-columns:1fr 1fr}.dyn-archive{padding:10px}.dyn-archive span{font-size:11px}.dyn-archive small{font-size:9px}}
