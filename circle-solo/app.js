@@ -44,10 +44,7 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify(game));return true;}
 function valid(g){return g&&g.version===1&&g.player&&typeof g.player.alias==='string'&&g.bots&&g.chats&&g.stage&&Array.isArray(g.blocked)&&Array.isArray(g.events);}
 function start(alias,age,city,bio,mode,job){game={version:1,seed:(Date.now()>>>0)||777,player:{alias:alias.slice(0,26),age:age.slice(0,2),city:city.slice(0,38),job:job.slice(0,40),bio:bio.slice(0,190)},mode:mode==='real'?'real':'livre',created:Date.now(),week:1,day:0,stage:'social',blocked:[],chats:{grupo:[]},events:[],bots:{},unread:{},tasks:{},ballots:[],rankings:[],influencers:[],vote:[],proposed:'',pendingBlock:'',lastRealDay:'',lastRealSunday:'',lastRoundDate:'',winner:'',gameOver:false};
 people.forEach(p=>{game.chats[p.id]=[];game.bots[p.id]={trust:Math.round((p.traits.trust-45)*.45+(rand()-.5)*35),suspicion:Math.round(rand()*25),said:[],other:{},memory:[],contacts:0,open:0};people.forEach(x=>{if(x.id!==p.id)game.bots[p.id].other[x.id]=Math.round((rand()-.5)*52);});});
-message('grupo','circle','ALERTA! Sejam bem-vindos ao Circle. Oito perfis, uma única vitória. Nem tudo é o que parece.');
-message('grupo','lia','GENTEEEE, começooou! Já tô nervosa kkkkk');
-message('grupo','manu','Nervosa nada, eu vim pra ganhar! Mas com carinho, tá? hahaha');
-message('grupo','bia','AAAAA eu tô surtando, oi todo mundo!!');
+message('grupo','circle','ALERTA! Bem-vindos ao Circle! Seus perfis estão liberados. Os chats já estão abertos. Boa sorte!');
 log('A temporada começou! Vc entrou com o perfil '+game.player.alias+'.','start');
 log('Entre nos chats e conheça os participantes. O primeiro bloqueio acontece no domingo.','alert');
 save();view='inicio';render();
@@ -73,45 +70,91 @@ family:/familia|mae|pai|irmao|casa/.test(s),
 other:mentioned(text)
 };}
 function fresh(id,responses){let b=n(id);let avail=responses.filter(s=>!b.said.slice(-7).includes(s));let answer=pick(avail.length?avail:responses);b.said.push(answer);if(b.said.length>30)b.said.shift();return answer;}
-function response(id,text,room){let p=pFor(id),b=n(id),t=discoverTone(text),author=game.player.alias,pre='',answers=[];
-if(t.angry){updateTrust(id,-23,'Vc foi hostil numa conversa.');answers=p.style==='fofa'?['Ai, achei meio pesado isso. Eu não queria brigar aqui.','Poxa, eu fiquei chateada com esse jeito de falar.']:['Calma, eu topo conversar, mas sem esse clima.','Não gostei dessa forma que vc falou. Vou ficar de olho.'];}
-else if(/\blembra\b|\blembrar\b|a gente conversou|falamos/.test(normalize(text))){answers=b.memory.length?['Lembro, sim. A gente falou sobre isso: '+b.memory.find(x=>x.includes('Conversa com'))?.split(': ').slice(1).join(': ')+'. Vc mudou de ideia?','Claro que lembro! Acho que nossas conversas dizem bastante sobre como a gente se aproxima aqui.']:['Ainda não tivemos tanto tempo pra conversar, mas tô prestando atenção em vc.'];}
-else if(t.work){answers=[p.trueSelf?'Trabalho como '+p.job.toLowerCase()+' mesmo! É corrido, mas gosto.':'Sou '+p.job.toLowerCase()+', sabe? Tenho uma rotina bem intensa.', 'Eu trabalho como '+p.job.toLowerCase()+'. E vc, faz o quê?'];if(!p.trueSelf)b.suspicion+=3;}
-else if(t.where){answers=['Sou de '+p.city+'! Inclusive tô com saudade das minhas coisinhas de casa kkk.','Moro em '+p.city+'. Como é aí na sua cidade?'];}
-else if(t.age){answers=['Tenho '+p.age+'! Mas às vezes minha cabeça parece ter uns 50 kkkkk.','Fiz '+p.age+' anos. Idade não diz muita coisa sobre estratégia, né?'];}
-else if(t.sus){const target=t.other&&t.other.id!==id?t.other:null;answers=target?['Eu também tô observando '+target.name+'. Tem umas coisas que não me convenceram ainda.','Não quero acusar '+target.name+' sem provas, mas vou prestar atenção.','Olha, pode ser... mas catfish também sabe agir MUITO bem.']:['Eu tô desconfiando de umas respostas aqui, mas prefiro guardar nomes por enquanto.','Sabe o que me pega? Quem tenta parecer perfeito demais.','Catfish pra mim não é só foto. O problema é a história não encaixar.'];if(target)b.other[target.id]=Math.max(-100,(b.other[target.id]||0)-10);if(!p.trueSelf)b.suspicion+=8;}
-else if(t.vote){answers=p.traits.game>70?['A classificação é complicada, né? Uma conversa muda tudo, mas eu não mostro minhas cartas tão fácil.','Eu tô pensando em quem conversa comigo de verdade e em quem só aparece no grupo.','Meu medo é um influenciador decidir no impulso. Tem que jogar com cabeça.']:['Ai, eu morro de medo dessa avaliação. Vou votar com o coração e seja o que for.','Quero muito continuar, mas não quero me perder tentando agradar todo mundo.','Ranking mexe com a cabeça de geral, né?'];}
-else if(t.trust){answers=p.traits.game>75?['Gosto da ideia de parceria, mas preciso sentir confiança de verdade. Me conta quem vc tá observando.','Eu prefiro criar uma aliança que faça sentido, não só prometer voto.','Se a gente jogar junto pode funcionar... mas sinceridade vai ser essencial.']:['Eu toparia uma parceria, sim! Só não quero falsidade depois, sabe?','Poxa, eu gostei de vc. Vamos conversando e construindo isso!','Fechar junto é bom, mas quero conhecer melhor o pessoal também.'];updateTrust(id,5,'Vc demonstrou vontade de parceria.');}
-else if(t.music){answers=id==='gui'?['MEU ASSUNTO! Se eu tivesse violão aqui já tinha feito música da temporada kkkkk.','Eu vivo música. Qual som vc colocaria na festa do Circle?']:['Amo quando o papo sai da estratégia! Que tipo de música vc curte?','Música sempre diz alguma coisa sobre a gente, né?'];}
-else if(t.family){answers=['Família é meu ponto fraco. Não consigo ficar muito tempo sem falar com o pessoal.','Eu trouxe muita coisa de casa comigo, até nessa experiência maluca. E vc?'];}
-else if(t.nice){answers=['Aaaa, que fofura! Eu também tô curtindo nossa conversa.','Vc tá me ganhando no papo, viu? kkkkk','Olhaaa, assim vc me deixa até sem jeito!'];updateTrust(id,4,'Vc demonstrou carinho e simpatia.');}
-else if(t.greet&&b.contacts<2){answers=p.opening.concat(['Oiii, '+author+'! Conta como tá se sentindo aqui dentro.','E aiiii! Ainda tentando descobrir quem é quem?']);}
-else if(t.game){answers=['Eu quero ganhar, claro, mas tô começando a achar que as relações contam mais que as provas.','Aqui qualquer palavra pode virar estratégia. Até o silêncio, né?','Vou ser sincero: eu já tenho algumas pessoas em quem confio mais do que outras.'];}
-else if(t.ask){answers=['Boa pergunta... não sei se respondo tão fácil assim kkkkk. O que vc acha?','Eu ainda tô tentando entender isso. A primeira impressão pode enganar demais.','Pra mim tudo depende da intenção das pessoas. E vc, como enxergou essa situação?'];}
-else{answers=['Entendiii. Mas me conta, vc tá confiando em alguém de verdade?','Olha, isso diz muito sobre o clima aqui dentro.','KKKKKK eu não tava esperando esse assunto. Continua!','Tô pensando aqui no que vc disse. Esse jogo faz a gente desconfiar até do próprio instinto.','Caramba, adorei saber isso! Vc já formou alguma amizade aqui?','Pode ser... mas será que todo mundo tá sendo tão sincero quanto parece?'];}
-let extra=[];
-if(b.trust>45){extra=['Sério, tô gostando de trocar ideia com vc.','Eu me sinto confortável falando contigo.'];}
-if(b.trust< -35){extra=['Depois do que rolou, eu prefiro manter um pouco de distância.','Pra ser sincero, não sei se estamos na mesma sintonia.'];}
-if(b.suspicion>55&&!p.trueSelf)extra=['Tô sentindo que tão analisando cada detalhe do que eu falo kkkkk.']; 
-let answer=fresh(id,answers);if(extra.length&&rand()<.22)answer+=' '+pick(extra);
-if(p.style==='fofa'&&rand()<.33)answer='Amggg, '+answer.charAt(0).toLowerCase()+answer.slice(1);
-if(p.style==='analitica'&&rand()<.26)answer='Eu vejo por outro lado: '+answer.charAt(0).toLowerCase()+answer.slice(1);
-if(p.style==='provocadora'&&rand()<.22)answer+=' Só não vem me subestimar, viu? haha';
-if(p.style==='descontraido'&&rand()<.22)answer+=' kkkkk';
-b.contacts++;b.memory.unshift('Conversa com '+author+': '+String(text).slice(0,80));b.memory=b.memory.slice(0,12);
-if(t.angry){}else if(t.nice||t.trust){}else if(t.sus&&t.other&&t.other.id===id)updateTrust(id,-14,'Vc questionou se este perfil é falso.');else updateTrust(id,1);
-return answer;
+
+
+const replyPending=new Set();
+function npcSay(room,id,text){
+ if(!game||game.gameOver||blocked(id))return;
+ message(room,id,text);
+ save();
+ if(view==='chats')render();
 }
-function npcSay(room,id,text){message(room,id,text);save();if(view==='chats')render();}
-function send(){if(game.gameOver||blocked('user'))return toast('A sua participação no Circle terminou.');let text=(draft||$('composer')?.value||'').trim().slice(0,1200);text=text.replace(/^(circle[\s,.:]*)?(escreve a[ií]|escreva a[ií]|escreve|digita)[\s,.:]*/i,'').replace(/[,.; ]*circle[\s,.:]*enviar[.! ]*$/i,'').trim();if(!text)return toast('Escreva uma mensagem primeiro.');draft='';message(chat,'user',text);const dest=chat;let receivers=dest==='grupo'?shuffle(people.filter(p=>!blocked(p.id))).slice(0,2+Math.floor(rand()*2)):people.filter(p=>p.id===dest&&!blocked(p.id));for(const p of receivers){let delay=550+Math.floor(rand()*1500);typingIds[p.id]=true;setTimeout(()=>{if(!game||game.gameOver)return;const output=response(p.id,text,dest);delete typingIds[p.id];npcSay(dest,p.id,output);},delay);}if(dest==='grupo'&&rand()<.21)updateTrust(pick(receivers).id,3,'Vc participou do grupo.');save();render();}
-function initiative(){const available=people.filter(p=>!blocked(p.id));if(!available.length)return;const actor=pick(available),other=pick(available.filter(p=>p.id!==actor.id));const texts=[
-'Tô curiosa: quem aqui acha que já encontrou um catfish? 👀',
-'Eu não consigo decidir em quem confiar. Uma hora a conversa flui, outra fica tudo estranho.',
-'Pergunta sincera: vcs estão jogando mais pelo coração ou pela estratégia?',
-'Acabei de mudar de opinião sobre uma pessoa aqui dentro. Esse jogo é doido!',
-'Eu quero uma festa do Circle URGENTE, genteee kkkkk',
-'Tem gente que só aparece perto de avaliação, repararam?'
-];message('grupo',actor.id,pick(texts));if(other){n(actor.id).other[other.id]=Math.max(-90,Math.min(90,n(actor.id).other[other.id]+Math.round((rand()-.5)*17)));}if(rand()<.47){const p=pick(available);message(p.id,p.id,fresh(p.id,['Oii, apareci do nada mesmo kkk. Como vc tá enxergando essa semana?','Tô passando pra dizer que gostei do seu jeito no grupo.','Vc teve alguma impressão diferente de alguém hoje?','Amg, tô com muita coisa na cabeça sobre a próxima classificação.']));}log('Novas conversas e mudanças nas relações entre os jogadores.','social');}
+function npcReply(room,id,objective,lastUserMessage,delay=2200){
+ if(!game||game.gameOver||blocked(id)||!window.CircleAI?.signedIn())return;
+ const key=room+'/'+id;
+ if(replyPending.has(key))return;
+ replyPending.add(key);
+ const session=game;
+ const jitter=Math.floor(rand()*3400);
+ typingIds[id]=true;
+ setTimeout(async()=>{
+  try{
+   if(game!==session||game.gameOver||blocked(id))return;
+   const actual=game.chats[room]||[];
+   const last=lastUserMessage||actual.filter(x=>x.by==='user').at(-1)?.text||'';
+   const answer=await CircleAI.reply({actor:pFor(id),room,game,people,lastUserMessage:last,objective});
+   if(game!==session||game.gameOver||blocked(id))return;
+   npcSay(room,id,answer);
+  }catch(err){
+   console.warn('NPC AI error',err);
+   if(game===session)toast('A IA não conseguiu responder agora. Verifique sua conta ou seus créditos e tente novamente.');
+  }finally{
+   replyPending.delete(key);
+   delete typingIds[id];
+   if(game===session&&view==='chats')render();
+  }
+ },delay+jitter);
+}
+function send(){
+ if(game.gameOver||blocked('user'))return toast('A sua participação no Circle terminou.');
+ if(!window.CircleAI?.signedIn())return toast('Conecte a IA primeiro para conversar com pessoas que respondem de verdade.');
+ let text=(draft||$('composer')?.value||'').trim().slice(0,1200);
+ text=text.replace(/^(circle[\s,.:]*)?(escreve a[ií]|escreva a[ií]|escreve|digita)[\s,.:]*/i,'').replace(/[,.; ]*circle[\s,.:]*enviar[.! ]*$/i,'').trim();
+ if(!text)return toast('Escreva uma mensagem primeiro.');
+ const dest=chat;
+ draft='';
+ message(dest,'user',text);
+ let receivers=dest==='grupo'?shuffle(people.filter(p=>!blocked(p.id))).slice(0,1+(rand()<.27?1:0)):people.filter(p=>p.id===dest&&!blocked(p.id));
+ const tone=discoverTone(text);
+ for(const p of receivers){
+  if(tone.angry)updateTrust(p.id,-14,'Uma mensagem ríspida.');
+  else if(tone.nice)updateTrust(p.id,3,'Uma conversa simpática.');
+  else if(tone.trust)updateTrust(p.id,2,'Mostrou interesse em se aproximar.');
+  else updateTrust(p.id,1,'Conversa normal.');
+  const objective=dest==='grupo'?
+    'Você leu uma mensagem de '+game.player.alias+' no grupo. Só responda se tiver uma reação genuína ao tema. Não mude de assunto. É uma conversa casual, no primeiro dia não fale de jogo nem estratégia espontaneamente.':
+    'Responda diretamente à última mensagem de '+game.player.alias+' na conversa privada de forma espontânea, coerente e humana. Não dê resposta genérica.';
+  npcReply(dest,p.id,objective,text,2200+Math.floor(rand()*2700));
+ }
+ save();
+ render();
+}
+function initiative(){
+ if(!game||game.gameOver||!window.CircleAI?.signedIn())return;
+ const available=people.filter(p=>!blocked(p.id));
+ if(!available.length)return;
+ const actor=pick(available);
+ const objective=(game.week===1&&game.day===0)?
+  'É o primeiro dia. Entre no grupo de forma espontânea com uma apresentação breve ou detalhe engraçado da sua rotina. Não pergunte quem é catfish, não fale de ranking nem de competição.':
+  'Escreva uma mensagem espontânea no grupo baseada em sua personalidade e nas conversas anteriores. Pode comentar rotina, música, um acontecimento da dinâmica do dia ou fazer uma observação engraçada. Só fale de estratégias se as pessoas já estão discutindo isso. Não seja genérico nem saia interrogando.';
+ npcReply('grupo',actor,objective,'',3200);
+}
+async function connectAI(){
+ if(!window.CircleAI)return toast('A integração de IA não carregou. Atualize a página com internet.');
+ try{
+  await CircleAI.connect();
+  toast('IA conectada! Agora os personagens podem conversar de verdade.');
+  if(game&&!game.aiIntro&&game.stage==='social'){
+   game.aiIntro=true;save();
+   initiative();
+  }
+  render();
+ }catch(err){
+  console.warn('AI login',err);
+  toast(err?.message||'Não foi possível conectar a IA.');
+ }
+}
+
 function dueTask(){if(game.stage!=='social')return null;const d=game.mode==='real'?nowSP().weekday===0?6:(nowSP().weekday+6)%7:game.day;if(d===2||d===5||d===6)return null;const idx=(game.week-1)*4+[0,1,0,2,3,0,0][d];const c=CHALLENGES[idx%CHALLENGES.length];const key=game.week+'-'+d;return {key,...c};}
 function nextDay(){if(game.mode!=='livre'||game.stage!=='social')return;if(game.day>=6)return;game.day++;if(game.day===2)log('Quarta-feira: dia livre de desenvolvimento. Nenhuma prova obrigatória.','pause');else if(game.day===5)log('Sábado: dia livre de gira. Nenhuma prova obrigatória.','pause');else if(game.day===6){game.stage='vote';log('ALERTA! Domingo, 18h: as avaliações estão abertas.','alert');message('grupo','circle','ALERTA! São 18h do domingo. É hora de classificar seus colegas do Circle.');}else{initiative();log('Um novo dia começou. A dinâmica está disponível na aba Jogos.','game');}save();render();}
 function checkReal(){if(!game||game.mode!=='real'||game.gameOver||game.stage!=='social')return;const t=nowSP();const k=t.date;if(game.lastRealDay!==k){game.lastRealDay=k;if(t.weekday!==3&&t.weekday!==6){initiative();}save();}if(t.weekday===0&&t.hour>=18&&game.lastRealSunday!==k){game.stage='vote';game.lastRealSunday=k;log('São 18h de domingo! As avaliações estão abertas.','alert');message('grupo','circle','ALERTA! Avaliações de domingo liberadas às 18h.');save();render();}}
@@ -159,7 +202,7 @@ function taskSubmit(){
    }}}
    log('Sua resposta à dinâmica "'+c.title+'" foi publicada.','game');
    message('grupo','circle',(c.type==='anon'?'Uma mensagem anônima foi enviada: ':'Dinâmica de '+game.player.alias+': ')+String(result).slice(0,450));
-   if(c.type!=='anon'&&rand()<.7){const bot=pick(people.filter(p=>!blocked(p.id)));if(bot)message('grupo',bot.id,refreshReaction(c.title));}
+   if(c.type!=='anon'&&rand()<.7){const bot=pick(people.filter(p=>!blocked(p.id)));if(bot)npcReply('grupo',bot.id,'Reaja de forma natural à última mensagem da dinâmica, sem soar como robô. Se for dia 1, não fale de alianças ou votos.','',3300);}
  }
  save();render();toast('Resposta registrada!');
 }
@@ -180,8 +223,8 @@ const call=game.stage==='vote'||game.stage==='influencers'||game.stage==='block'
 content+=title('Painel do Circle','O que está acontecendo?')+'<div class="grid2"><section class="panel"><div class="spread"><span class="pill '+(call?'':'green')+'">'+E(stage)+'</span><span class="muted">'+alive().length+' perfis ativos</span></div><h2 style="margin-top:16px">Sua próxima movimentação</h2><p class="muted">'+(game.gameOver?'Sua trajetória pode ser revista em Resultado.':game.stage==='social'?(currentDay()===2||currentDay()===5?'Hoje vc não tem dinâmica obrigatória. Converse apenas se quiser.':'Converse, analise os perfis e participe das dinâmicas. Suas relações influenciam os votos.'):game.stage==='vote'?'É hora de ordenar os outros jogadores, do mais querido ao menos querido.':game.stage==='influencers'?'Os resultados já foram calculados. Os influenciadores serão revelados às 20h.':game.stage==='block'?'Os influenciadores precisam decidir quem será bloqueado.':game.stage==='final'?'A classificação final está pronta. A revelação acontece às 21h.':'Veja a pessoa bloqueada e siga para a próxima semana.')+'</p><div class="row">'+(call?'<button class="btn" data-act="nav" data-to="'+(game.stage==='post'?'resultado':'avaliacoes')+'">Ver evento do Circle</button>':actions())+'</div></section><section class="panel"><h2>Últimos acontecimentos</h2>'+eventList(4)+'</section></div>'+title('Participantes','Quem parece confiável?')+'<div class="people">'+people.filter(p=>!blocked(p.id)).slice(0,4).map(p=>personCard(p)).join('')+'</div>';return content;}
 function personCard(p){return '<button class="person" data-act="openchat" data-id="'+p.id+'">'+av(p.id)+'<h3>'+E(p.name)+'</h3><small>'+E(p.age)+' anos · '+E(p.city)+'</small><p>'+E(p.bio)+'</p><span style="display:block;margin-top:10px;color:#e7acd4;font-size:11px">Conversar →</span></button>';}
 function playerList(){return title('Os oito perfis','Ninguém pode ver identidades secretas antes do bloqueio.')+'<div class="people">'+['user',...people.map(p=>p.id)].map(id=>{const p=pFor(id);const dead=blocked(id);return '<div class="person" style="'+(dead?'opacity:.54;':'')+'">'+av(id)+'<h3>'+E(p.name)+(id==='user'?' (vc)':'')+'</h3><small>'+E(p.age||'')+' anos · '+E(p.city||'')+'</small><p>'+E(p.bio||'')+'</p><div class="row" style="margin-top:12px"><span class="pill '+(dead?'':'green')+'">'+(dead?'BLOQUEADO':'NO JOGO')+'</span>'+(id!=='user'&&!dead?'<button class="btn secondary sm" data-act="openchat" data-id="'+id+'">Conversar</button>':'')+'</div>'+(dead&&id!=='user'?'<p style="color:var(--gold);font-size:11px">Revelação: '+E(p.secret)+'</p>':'')+'</div>';}).join('')+'</div>';}
-function chats(){const ids=['grupo',...people.map(p=>p.id)];if(chat!=='grupo'&&blocked(chat)){}let name=chat==='grupo'?'Chat geral':pFor(chat).name;const msgs=(game.chats[chat]||[]).map(m=>'<div class="msg '+(m.by==='user'?'mine':'')+'"><div class="who">'+E(m.by==='circle'?'● CIRCLE':pFor(m.by).name)+'</div><div class="bubble">'+E(m.text)+'</div><div class="hour">'+humanDate(m.at)+'</div></div>').join('');
-return '<div class="chatLayout"><div class="chatList">'+ids.map(id=>{const p=id==='grupo'?{name:'Chat geral',initial:'✳',cls:'me'}:pFor(id);return '<button class="chatContact '+(chat===id?'sel':'')+'" data-act="openchat" data-id="'+id+'"><div class="avatar '+p.cls+'">'+p.initial+'</div><div><b>'+E(p.name)+'</b><small>'+(id==='grupo'?'Todos os jogadores':(blocked(id)?'Bloqueado · conversa arquivada':'Mensagem privada'))+'</small></div>'+(game.unread[id]?'<span class="unread">'+game.unread[id]+'</span>':'')+'</button>';}).join('')+'</div><div class="chatArea"><div class="chatHead">'+(chat==='grupo'?'<div class="avatar me">✳</div>':av(chat))+'<div><h2>'+E(name)+'</h2><small>'+(chat==='grupo'?'Conversa com todos os participantes':blocked(chat)?'Este jogador foi bloqueado':'Conversa privada · sua estratégia importa')+'</small></div></div><div id="messages" class="messages">'+(msgs||'<div class="muted">Ainda não há mensagens aqui. Que tal começar uma conversa?</div>')+'</div><div class="composeBox"><div class="typing">'+(Object.keys(typingIds).some(id=>chat===id||chat==='grupo')?'● alguém está digitando...':'')+'</div><div class="compose"><textarea id="composer" aria-label="Digite sua mensagem" placeholder="Diga algo ao Circle..." '+(game.gameOver||blocked('user')||blocked(chat)?'disabled':'')+'>'+E(draft)+'</textarea><button class="iconbtn" data-act="mic" aria-label="Ativar comando de voz" title="Ativar comando de voz">'+(listening?'🔴':'🎙️')+'</button><button class="iconbtn send" data-act="send" aria-label="Enviar mensagem" title="Enviar mensagem" '+(game.gameOver||blocked('user')||blocked(chat)?'disabled':'')+'>➤</button></div><div class="hint">Toque no microfone e diga: “Circle, escreve aí: oi, gente!” ou “Circle, enviar”. No iPhone, o navegador pode exigir ativação a cada fala.</div></div></div></div>';}
+function chats(){const aiBanner=window.CircleAI?.signedIn()?'':'<div class="alert" style="margin-bottom:12px"><strong>Conversas reais com IA</strong><p class="muted">Para os participantes responderem com contexto, conecte a IA. Será necessário entrar numa conta Puter. Há créditos iniciais gratuitos e podem existir cobranças se vc optar por ampliar seu uso.</p><button class="btn sm" data-act="connectai">Conectar inteligência artificial</button></div>';const ids=['grupo',...people.map(p=>p.id)];if(chat!=='grupo'&&blocked(chat)){}let name=chat==='grupo'?'Chat geral':pFor(chat).name;const msgs=(game.chats[chat]||[]).map(m=>'<div class="msg '+(m.by==='user'?'mine':'')+'"><div class="who">'+E(m.by==='circle'?'● CIRCLE':pFor(m.by).name)+'</div><div class="bubble">'+E(m.text)+'</div><div class="hour">'+humanDate(m.at)+'</div></div>').join('');
+return aiBanner+'<div class="chatLayout"><div class="chatList">'+ids.map(id=>{const p=id==='grupo'?{name:'Chat geral',initial:'✳',cls:'me'}:pFor(id);return '<button class="chatContact '+(chat===id?'sel':'')+'" data-act="openchat" data-id="'+id+'"><div class="avatar '+p.cls+'">'+p.initial+'</div><div><b>'+E(p.name)+'</b><small>'+(id==='grupo'?'Todos os jogadores':(blocked(id)?'Bloqueado · conversa arquivada':'Mensagem privada'))+'</small></div>'+(game.unread[id]?'<span class="unread">'+game.unread[id]+'</span>':'')+'</button>';}).join('')+'</div><div class="chatArea"><div class="chatHead">'+(chat==='grupo'?'<div class="avatar me">✳</div>':av(chat))+'<div><h2>'+E(name)+'</h2><small>'+(chat==='grupo'?'Conversa com todos os participantes':blocked(chat)?'Este jogador foi bloqueado':'Conversa privada · sua estratégia importa')+'</small></div></div><div id="messages" class="messages">'+(msgs||'<div class="muted">Ainda não há mensagens aqui. Que tal começar uma conversa?</div>')+'</div><div class="composeBox"><div class="typing">'+(Object.keys(typingIds).some(id=>chat===id||chat==='grupo')?'● alguém está digitando...':'')+'</div><div class="compose"><textarea id="composer" aria-label="Digite sua mensagem" placeholder="Diga algo ao Circle..." '+(game.gameOver||blocked('user')||blocked(chat)?'disabled':'')+'>'+E(draft)+'</textarea><button class="iconbtn" data-act="mic" aria-label="Ativar comando de voz" title="Ativar comando de voz">'+(listening?'🔴':'🎙️')+'</button><button class="iconbtn send" data-act="send" aria-label="Enviar mensagem" title="Enviar mensagem" '+(game.gameOver||blocked('user')||blocked(chat)?'disabled':'')+'>➤</button></div><div class="hint">Toque no microfone e diga: “Circle, escreve aí: oi, gente!” ou “Circle, enviar”. No iPhone, o navegador pode exigir ativação a cada fala.</div></div></div></div>';}
 function games(){
  let c=dueTask(),done=c&&game.tasks[c.key];
  let copy='<div class="hero"><span class="pill">DINÂMICAS DA TEMPORADA</span><h2>Jogue com cabeça e coração</h2><p>Suas decisões alteram a imagem que os adversários têm de vc. Quarta e sábado são livres. Nos outros dias, as dinâmicas podem render conversas e desconfiança.</p></div>';
@@ -223,6 +266,7 @@ else if(!game)return;
 else if(action==='nav'){view=to;render();}
 else if(action==='openchat'){chat=id;draft='';game.unread[id]=0;view='chats';save();render();}
 else if(action==='send')send();
+else if(action==='connectai')connectAI();
 else if(action==='mic')microphone();
 else if(action==='nextday')nextDay();
 else if(action==='task')taskSubmit();
