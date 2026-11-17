@@ -84,9 +84,12 @@ function modeName(kind){
  return ({zodiac:'Descubra o signo',poll:'Pesquisa de Opinião',truth:'Jogo da Verdade',quiz:'Mentes Brilhantes',painting:'Pintando Verdades',rival:'Meu Maior Rival',bomb:'A Última Bomba',dance:'Segue o Baile',party:'Festa do Circle',quote:'Quem disse isso?',confession:'Confissões',ally:'Compatibilidade'})[kind]||kind;
 }
 function picksForQuotes(game,people,random){
- const options=shuffle(quotes.filter(q=>alive(game,people).includes(q.by)),random).slice(0,3);
- return options.map(q=>({text:q.text,by:q.by,options:shuffle(alive(game,people).filter(x=>x!=='user'),random).slice(0,4).includes(q.by)
-  ?shuffle(alive(game,people).filter(x=>x!=='user'),random).slice(0,4):shuffle([q.by,...shuffle(alive(game,people).filter(x=>x!=='user'&&x!==q.by),random).slice(0,3)],random)}));
+ const list=shuffle(quotes.filter(q=>alive(game,people).includes(q.by)),random).slice(0,3);
+ const options=alive(game,people).filter(x=>x!=='user');
+ return list.map(q=>{
+  const wrong=shuffle(options.filter(id=>id!==q.by),random).slice(0,3);
+  return {text:q.text,by:q.by,options:shuffle([q.by,...wrong],random)};
+ });
 }
 function context(game,people,challenge,random){
  if(challenge.type!=='quote')return null;
@@ -128,7 +131,8 @@ function resolved(game,people,c,input,random){
  }
  else if(c.type==='poll'){
   opinion('user','Sua pesquisa','Mais confiável: '+name(game,people,input.trusted)+' · possível catfish: '+name(game,people,input.suspect),{trusted:input.trusted,suspect:input.suspect});
-  for(const p of bots){let trusted=select(p.id,'trust'),suspect=select(p.id,'sus',[trusted]);opinion(p.id,'Voto secreto de '+p.name,'Votação registrada',{trusted,suspect});}
+  for(const p of bots){let trusted=select(p.id,'trust'),suspect=select(p.id,'sus',[trusted]);opinion(p.id,'Voto secreto de '+p.name,'Votação registrada',{trusted,suspect});
+   const state=game.bots[p.id];if(trusted!=='user')state.other[trusted]=Math.min(100,(state.other[trusted]||0)+5);if(suspect!=='user')state.other[suspect]=Math.max(-100,(state.other[suspect]||0)-6);}
   const trusted=tally(entries,'trusted','Mais confiável');
   const suspected=tally(entries,'suspect','Mais suspeito de ser catfish');
   headline='O Circle revelou a opinião da casa';
@@ -184,7 +188,7 @@ function resolved(game,people,c,input,random){
  }
  else if(c.type==='rival'){
   opinion('user','Sua escolha',name(game,people,input.target)+(input.text?' — '+input.text:''),{target:input.target});
-  for(const p of bots){let target=select(p.id,'sus');opinion(p.id,'Escolha secreta de '+p.name,'', {target});}
+  for(const p of bots){let target=select(p.id,'sus');opinion(p.id,'Escolha secreta de '+p.name,'', {target});if(target!=='user')game.bots[p.id].other[target]=Math.max(-100,(game.bots[p.id].other[target]||0)-7);}
   let bars=tally(entries,'target','Quem foi citado como maior rival');
   headline='O maior rival da casa foi escolhido';
   summary=(bars[0]?name(game,people,bars[0].id)+' recebeu '+bars[0].count+' indicação(ões).':'');
@@ -235,12 +239,21 @@ function resolved(game,people,c,input,random){
    const q=cards[i];if(input.guesses?.[i]===q.by)score++;
    opinion(q.by,'Depoimento '+(i+1),q.text,{correct:q.by,userGuess:input.guesses?.[i],quote:i+1});
   }
+  const table=[{by:'user',name:name(game,people,'user'),points:score}];
+  for(const p of bots){
+   let count=0;
+   const guesses=cards.map(q=>random()<(.23+p.traits.social*.004)?q.by:randomPick(q.options,random));
+   for(let i=0;i<cards.length;i++)if(guesses[i]===cards[i].by)count++;
+   table.push({by:p.id,name:p.name,points:count});
+  }
+  table.sort((a,b)=>b.points-a.points||a.name.localeCompare(b.name));
   sections.push({title:'Quem disse cada frase',type:'notes',rows:cards.map((q,i)=>({label:'Frase '+(i+1),detail:name(game,people,q.by)+' · vc respondeu '+name(game,people,input.guesses?.[i])}))});
+  sections.push({title:'Placar da investigação',type:'scores',rows:table});
   headline='Vc acertou '+score+' de '+cards.length+' identidades';
-  summary='Agora os autores dos depoimentos foram revelados. Acertar depende de lembrar quem é quem, não de adivinhar quem é catfish.';
+  summary='Todos os oito jogadores tentaram reconhecer as frases. Os autores foram revelados e o melhor resultado foi '+table[0].points+' acerto(s).';
   reaction='O Circle revelou quem escreveu cada depoimento. '+headline+'.';
-  stake='Esta dinâmica testa o quanto vc conhece o jeito de cada um.';
-  outcome={score,max:cards.length};
+  stake='Esta dinâmica testa o quanto vc conhece o jeito de cada um; não revela quem é catfish.';
+  outcome={score,max:cards.length,scores:table};
  }
  else if(c.type==='confession'){
   opinion('user','Confissão anônima',input.text,{anonymous:true});
@@ -254,7 +267,7 @@ function resolved(game,people,c,input,random){
  }
  else if(c.type==='ally'){
   opinion('user','Sua dupla',name(game,people,input.target)+(input.text?' — '+input.text:''),{partner:input.target});
-  for(const p of bots){const partner=select(p.id,'trust');opinion(p.id,'Escolha secreta de '+p.name,'',{partner});}
+  for(const p of bots){const partner=select(p.id,'trust');opinion(p.id,'Escolha secreta de '+p.name,'',{partner});if(partner!=='user')game.bots[p.id].other[partner]=Math.min(100,(game.bots[p.id].other[partner]||0)+8);}
   const mutual=[];
   for(const item of entries){if(item.by==='user'||!item.partner)continue;const other=entries.find(e=>e.by===item.partner);if(other?.partner===item.by)mutual.push([item.by,item.partner]);}
   let pair=mutual.length?randomPick(mutual,random):null;
@@ -271,7 +284,7 @@ function resolved(game,people,c,input,random){
   outcome={protected:pair};
  }
  else throw Error('Tipo de dinâmica desconhecido: '+c.type);
- return {key:c.key,kind:c.type,title:c.title,headline,summary,reaction,stake,entries,sections,meta:outcome,submittedAt:Date.now(),releaseAt:Date.now()+10500,stage:'collecting',resultRead:false,reacted:false};
+ return {key:c.key,kind:c.type,title:c.title,headline,summary,reaction,stake,entries,sections,meta:outcome,submittedAt:Date.now(),releaseAt:Date.now()+13500+Math.floor(random()*4000),stage:'collecting',resultRead:false,reacted:false};
 }
 window.CircleDynamics={signs,quiz,styles,publicSigns,modeName,context,resolved,alive,quotes};
 })();
