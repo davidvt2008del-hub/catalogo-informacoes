@@ -204,7 +204,29 @@ function taskSubmit(){
  game.dynamics[c.key]=outcome;
  game.tasks[c.key]={answer:data.text||data.sign||data.style||data.trusted||'Respostas enviadas',title:c.title,at:Date.now(),image:data.image||''};
  log('Todos estão participando de "'+c.title+'". Aguarde a apuração.','game');
- painted=false;save();render();toast('Sua resposta foi enviada. O Circle vai reunir as outras participações.');
+ painted=false;save();render();enrichDynamic(c.key);toast('Sua resposta foi enviada. O Circle vai reunir as outras participações.');
+}
+async function enrichDynamic(key){
+ const d=(game.dynamics||{})[key];
+ if(!d||!window.CircleAI?.signedIn()||!window.CircleAI.round)return;
+ const session=game;d.enriching=true;save();
+ try{
+  const lines=await CircleAI.round({kind:d.kind,game,people,entries:d.entries});
+  if(game!==session||game.dynamics?.[key]!==d||d.stage!=='collecting'||!lines)return;
+  for(const entry of d.entries){
+   if(lines[entry.by]&&entry.by!=='user'){
+    entry.detail=lines[entry.by];
+    if(game.bots[entry.by]){
+     game.bots[entry.by].memory.unshift('Na dinâmica '+d.title+': '+lines[entry.by].slice(0,140));
+     game.bots[entry.by].memory=game.bots[entry.by].memory.slice(0,12);
+    }
+   }
+  }
+  d.enriched=true;save();
+ }catch(error){console.warn('IA da dinâmica indisponível; respostas da simulação mantidas',error);}
+ finally{
+  if(game===session&&game.dynamics?.[key]===d){d.enriching=false;save();if(view==='jogos')render();}
+ }
 }
 function revealDynamic(key){
  const d=(game.dynamics||{})[key];if(!d||d.stage!=='collecting')return;
@@ -344,7 +366,7 @@ function dynResults(d){
   charts+='</div>';
  }
  const secret=['poll','rival','ally'].includes(d.kind);
- const hiddenAnon=['confession','bomb'].includes(d.kind);
+ const hiddenAnon=['confession','bomb','painting'].includes(d.kind);
  let entries=rows;
  if(secret)entries=rows.filter(x=>x.by==='user');
  if(d.kind==='quote')entries=[];
@@ -365,14 +387,14 @@ function dynResults(d){
 }
 function dynActive(d){
  if(d.stage!=='collecting')return dynResults(d);
- const elapsed=Math.max(0,Date.now()-d.submittedAt),duration=Math.max(1000,d.releaseAt-d.submittedAt),count=Math.min(7,Math.max(0,Math.floor(7*elapsed/duration)));
+ const elapsed=Math.max(0,Date.now()-d.submittedAt),duration=Math.max(1000,d.releaseAt-d.submittedAt),botTotal=d.botCount??7,count=Math.min(botTotal,Math.max(0,Math.floor(botTotal*elapsed/duration)));
  const ready=Date.now()>=d.releaseAt;
- return '<section class="dyn-progress"><span class="pill">CIRCLE · APURAÇÃO</span><h2>Os jogadores estão participando</h2><p class="muted">Sua resposta já foi enviada. O Circle está reunindo as escolhas dos outros sete participantes desta simulação.</p><div class="dyn-progress-track"><div style="width:'+Math.round(100*count/7)+'%"></div></div><div class="spread"><strong>'+count+' de 7 participantes</strong><span>'+(!ready?'Preparando resultados...':'Todas as respostas recebidas')+'</span></div>'+(ready?'<button class="btn" data-act="dynreveal" data-id="'+E(d.key)+'">Revelar resultados do Circle</button>':'<div class="dyn-wait">O resultado será liberado em instantes.</div>')+'</section>';
+ return '<section class="dyn-progress"><span class="pill">CIRCLE · APURAÇÃO</span><h2>Os jogadores estão participando</h2><p class="muted">Sua resposta já foi enviada. O Circle está reunindo as respostas dos '+botTotal+' participantes que continuam no jogo.</p><div class="dyn-progress-track"><div style="width:'+(botTotal?Math.round(100*count/botTotal):100)+'%"></div></div><div class="spread"><strong>'+count+' de '+botTotal+' participantes</strong><span>'+(!ready?'Preparando resultados...':'Todas as respostas recebidas')+'</span></div>'+(ready?'<button class="btn" data-act="dynreveal" data-id="'+E(d.key)+'">Revelar resultados do Circle</button>':'<div class="dyn-wait">O resultado será liberado em instantes.</div>')+'</section>';
 }
 function games(){
  const current=dueTask();const latest=Object.values(game.dynamics||{}).reverse();
  let copy='<div class="hero"><span class="pill">TODOS PARTICIPAM</span><h2>Dinâmicas que movimentam o jogo</h2><p>Vc faz sua parte. Os outros jogadores também escolhem, respondem ou desenham. Depois o Circle apura e revela os resultados — e as consequências aparecem nos relacionamentos e no chat.</p></div>';
- let shown=current;let d=current&&dynState(current);
+ let shown=current;let d=current&&dynState(current);if(!window.CircleAI?.signedIn())copy+='<div class="dyn-note">Os votos e resultados são simulados mesmo sem conexão. Para os outros jogadores escreverem respostas mais naturais e específicas, conecte sua conta de IA na aba Chats.</div>';
  if(openedDynamic){const archive=(game.dynamics||{})[openedDynamic];if(archive){copy+='<button class="btn secondary sm" data-act="dynback">← Voltar aos jogos atuais</button>';copy+=dynActive(archive);copy+=title('Registro das dinâmicas anteriores');copy+='<div class="dyn-archive-list">'+latest.filter(x=>x.key!==openedDynamic).map(dynCard).join('')+'</div>';return copy;}openedDynamic=null;}
  if(game.stage!=='social')copy+='<div class="alert">Hoje o Circle está na fase de avaliações ou bloqueios. As provas não estão abertas, mas os resultados anteriores continuam disponíveis abaixo.</div>';
  else if(!current)copy+='<section class="panel"><h2>🌿 Dia livre</h2><p class="muted">Quarta é seu desenvolvimento, sábado é sua gira e domingo é dia de avaliações. Não há uma dinâmica obrigatória agora.</p></section>';
