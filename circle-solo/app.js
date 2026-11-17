@@ -377,7 +377,7 @@ function dynResults(d){
   const icon=e.symbol?'<div class="dyn-art-symbol">'+E(e.symbol)+'</div>':'';
   return '<article class="dyn-entry">'+(!hiddenAnon?'<div class="row">'+av(e.by)+'<strong>'+E(who)+'</strong></div>':'<strong>'+E(who)+'</strong>')+'<p>'+E(e.detail||'Participação registrada')+'</p>'+picture+icon+'</article>';
  }).join('')+'</div></div>':'';
- if(d.kind==='poll')cards='<div class="dyn-note">Seu voto: '+E(d.entries[0]?.detail||'Registrado')+'. Os outros votos são secretos; os números abaixo já incluem os oito participantes.</div>';
+ if(d.kind==='poll')cards='<div class="dyn-note">Seu voto: '+E(d.entries[0]?.detail||'Registrado')+'. Os outros votos são secretos; os números abaixo incluem '+(d.botCount+1)+' participantes ainda ativos.</div>';
  if(d.kind==='rival'||d.kind==='ally')cards='<div class="dyn-note">Sua escolha: '+E(d.entries[0]?.detail||'Registrada')+'. As escolhas individuais dos outros participantes são sigilosas.</div>';
  let base='<div class="dyn-results"><div class="dyn-headline"><span class="pill">ALERTA! O CIRCLE REVELOU</span><h2>'+E(d.headline)+'</h2><p>'+E(d.summary)+'</p></div>'+cards+charts+'<div class="dyn-note">'+E(d.stake)+'</div>';
  const bombsToUser=d.kind==='bomb'?(d.meta?.questions||[]).filter(q=>q.target==='user'):[];
