@@ -63,7 +63,7 @@ function randomPick(a,random){return a[Math.floor(random()*a.length)]}
 function shuffle(a,random){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function name(game,people,id){return id==='user'?game.player.alias:(people.find(p=>p.id===id)?.name||id)}
 function alive(game,people){return ['user',...people.map(p=>p.id)].filter(id=>!game.blocked.includes(id));}
-function score(game,id,target,kind,random){
+function score(game,people,id,target,kind,random){
  const bot=game.bots[id];
  const rel=target==='user'?(bot?.trust||0):(bot?.other?.[target]||0);
  const targetProfile=kind==='sus'?people.find(p=>p.id===target):null;
@@ -73,7 +73,7 @@ function score(game,id,target,kind,random){
 }
 function choose(game,people,id,kind,random,exclude=[]){
  const options=alive(game,people).filter(x=>x!==id&&!exclude.includes(x));
- return options.map(target=>({target,value:score(game,id,target,kind,random)})).sort((a,b)=>b.value-a.value)[0]?.target||'user';
+ return options.map(target=>({target,value:score(game,people,id,target,kind,random)})).sort((a,b)=>b.value-a.value)[0]?.target||'user';
 }
 function histogram(entries,k,game,people){
  const counts={};for(const e of entries){const id=e[k];if(id)counts[id]=(counts[id]||0)+1;}
