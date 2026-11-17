@@ -1,7 +1,7 @@
 /* Circle: Minha Temporada — jogo de simulação social individual */
 (function(){
 'use strict';
-const KEY='circle-solo-v1';
+const KEY='circle-solo-v2';
 const $=id=>document.getElementById(id);
 const E=s=>String(s===undefined||s===null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const normalize=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^\w\s]/g,' ').replace(/\s+/g,' ').trim();
@@ -47,7 +47,7 @@ people.forEach(p=>{game.chats[p.id]=[];game.bots[p.id]={trust:Math.round((p.trai
 message('grupo','circle','ALERTA! Bem-vindos ao Circle! Seus perfis estão liberados. Os chats já estão abertos. Boa sorte!');
 log('A temporada começou! Vc entrou com o perfil '+game.player.alias+'.','start');
 log('Entre nos chats e conheça os participantes. O primeiro bloqueio acontece no domingo.','alert');
-save();view='inicio';render();
+save();view='inicio';render();if(window.CircleAI?.signedIn()){game.aiIntro=true;save();initiative();}
 }
 function blocked(id){return game.blocked.includes(id);}
 function updateTrust(id,d,source){let b=n(id);b.trust=Math.max(-100,Math.min(100,b.trust+d));if(source)b.memory.unshift(source.slice(0,140));b.memory=b.memory.slice(0,12);}
@@ -134,7 +134,7 @@ function initiative(){
  const available=people.filter(p=>!blocked(p.id));
  if(!available.length)return;
  const actor=pick(available);
- const objective=(game.week===1&&game.day===0)?
+ const objective=(game.week===1&&currentDay()===0)?
   'É o primeiro dia. Entre no grupo de forma espontânea com uma apresentação breve ou detalhe engraçado da sua rotina. Não pergunte quem é catfish, não fale de ranking nem de competição.':
   'Escreva uma mensagem espontânea no grupo baseada em sua personalidade e nas conversas anteriores. Pode comentar rotina, música, um acontecimento da dinâmica do dia ou fazer uma observação engraçada. Só fale de estratégias se as pessoas já estão discutindo isso. Não seja genérico nem saia interrogando.';
  npcReply('grupo',actor,objective,'',3200);
