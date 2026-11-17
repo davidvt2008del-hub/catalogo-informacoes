@@ -158,7 +158,7 @@ async function connectAI(){
 function dueTask(){if(game.stage!=='social')return null;const d=game.mode==='real'?nowSP().weekday===0?6:(nowSP().weekday+6)%7:game.day;if(d===2||d===5||d===6)return null;const idx=(game.week-1)*4+[0,1,0,2,3,0,0][d];const c=CHALLENGES[idx%CHALLENGES.length];const key=game.week+'-'+d;return {key,...c};}
 function nextDay(){if(game.mode!=='livre'||game.stage!=='social')return;if(game.day>=6)return;const current=dueTask();if(current){const state=dynState(current);if(!state||state.stage!=='complete')return toast('Antes de avançar, participe da dinâmica de hoje, veja o resultado e conclua o evento.');}game.day++;openedDynamic=null;if(game.day===2)log('Quarta-feira: dia livre de desenvolvimento. Nenhuma prova obrigatória.','pause');else if(game.day===5)log('Sábado: dia livre de gira. Nenhuma prova obrigatória.','pause');else if(game.day===6){game.stage='vote';log('ALERTA! Domingo, 18h: as avaliações estão abertas.','alert');message('grupo','circle','ALERTA! São 18h do domingo. É hora de classificar seus colegas do Circle.');}else{initiative();log('Um novo dia começou. A dinâmica está disponível na aba Jogos.','game');}save();render();}
 function checkReal(){if(!game||game.mode!=='real'||game.gameOver||game.stage!=='social')return;const t=nowSP();const k=t.date;if(game.lastRealDay!==k){game.lastRealDay=k;if(t.weekday!==3&&t.weekday!==6){initiative();}save();}if(t.weekday===0&&t.hour>=18&&game.lastRealSunday!==k){game.stage='vote';game.lastRealSunday=k;log('São 18h de domingo! As avaliações estão abertas.','alert');message('grupo','circle','ALERTA! Avaliações de domingo liberadas às 18h.');save();render();}}
-function allBotBallots(){const ids=alive();const result={};for(const p of people.filter(p=>!blocked(p.id))){const b=n(p.id);let choices=ids.filter(id=>id!==p.id);const score=id=>{let rel=id==='user'?b.trust:(b.other[id]||0);let target=id==='user'?{traits:{game:53,trust:55}}:pFor(id);let untrust=(id!=='user'&&!target.trueSelf&&p.traits.game>60?8:0);return rel*.72+(100-p.traits.game)*.12*(rel>0?1:-1)+rand()*45+(target.traits?.social||60)*.08-untrust;};const scored=choices.map(id=>({id,points:score(id)}));scored.sort((x,y)=>y.points-x.points);result[p.id]=scored.map(x=>x.id);}return result;}
+function allBotBallots(){const ids=alive();const result={};for(const p of people.filter(p=>!blocked(p.id))){const b=n(p.id);let choices=ids.filter(id=>id!==p.id);const score=id=>{let rel=id==='user'?b.trust:(b.other[id]||0);let target=id==='user'?{traits:{game:53,trust:55}}:pFor(id);let untrust=0;return rel*.72+(100-p.traits.game)*.12*(rel>0?1:-1)+rand()*45+(target.traits?.social||60)*.08-untrust;};const scored=choices.map(id=>({id,points:score(id)}));scored.sort((x,y)=>y.points-x.points);result[p.id]=scored.map(x=>x.id);}return result;}
 function voteSubmit(){if(game.stage!=='vote')return;let order=Array.from(document.querySelectorAll('[data-rank-id]')).map(x=>x.dataset.rankId);if(order.length!==alive().length-1||new Set(order).size!==order.length)return toast('Complete seu ranking antes de enviar.');game.vote=order;const all=allBotBallots();all.user=order;game.ballots.push({week:game.week,all});let scores={};for(const voter of Object.keys(all)){all[voter].forEach((id,i)=>{if(!scores[id])scores[id]={points:0,count:0};scores[id].points+=(all[voter].length-i);scores[id].count++;});}const ranking=alive().map(id=>({id,score:scores[id]?scores[id].points/scores[id].count:0})).sort((a,b)=>b.score-a.score||((a.id>b.id)?1:-1));game.rankings.push({week:game.week,ranking});game.influencers=ranking.slice(0,2).map(x=>x.id);game.stage=game.week===4?'final':'influencers';log('Todas as avaliações foram calculadas. O resultado está guardado.','vote');message('grupo','circle','As avaliações foram encerradas. Os influenciadores serão anunciados às 20h.');save();view='avaliacoes';render();}
 function revealInfluencers(){if(game.stage!=='influencers')return;if(game.mode==='real'&&nowSP().weekday===0&&nowSP().hour<20)return toast('A revelação acontece a partir das 20h.');game.stage='block';log('20h — Influenciadores da semana: '+game.influencers.map(id=>pFor(id).name).join(' e ')+'.','alert');message('grupo','circle','ALERTA! Os influenciadores da semana são '+game.influencers.map(id=>pFor(id).name).join(' e ')+'. A Sala Azul foi aberta.');save();render();}
 function possibleTargets(){const protectedIds=game.immunity?.week===game.week?(game.immunity.ids||[]):[];const avail=alive().filter(id=>!game.influencers.includes(id));const targetable=avail.filter(id=>!protectedIds.includes(id));return targetable.length?targetable:avail;}
@@ -214,22 +214,69 @@ function revealDynamic(key){
  log('Resultado divulgado: '+d.headline,'reveal');
  save();render();
 }
+
 function reactDynamic(key){
  const d=(game.dynamics||{})[key];if(!d||d.stage!=='results')return;
  d.stage='discussion';d.reacted=true;
  const liveBots=people.filter(p=>!blocked(p.id));
- if(window.CircleAI?.signedIn()&&liveBots.length){
-  const responders=shuffle(liveBots).slice(0,2);
-  const context='Dinâmica '+d.title+' encerrada. '+d.summary+' '+d.stake+
-   ' Reaja especificamente ao resultado divulgado pelo Circle no grupo, usando sua personalidade e relações. Fale como pessoa comum, não como apresentador. Não repita o comunicado. Se essa votação atingiu seu perfil, reaja com emoção condizente. Esta mensagem não é para o jogador humano e sim para o grupo inteiro.';
-  for(const p of responders)npcReply('grupo',p.id,context,'@circle',2500+Math.floor(rand()*1700));
+ const wanted=[];
+ if(d.kind==='poll'){
+  const poll=d.meta?.poll;const ids=[poll?.suspected?.[0]?.id,poll?.trusted?.[0]?.id];
+  ids.filter(id=>id&&id!=='user'&&!blocked(id)).forEach(id=>wanted.push(id));
+ }else if(d.kind==='rival'){
+  const top=d.sections.find(s=>s.type==='bars')?.rows?.[0]?.id;if(top&&top!=='user'&&!blocked(top))wanted.push(top);
+ }else if(d.kind==='bomb'){
+  const questions=d.meta?.questions||[];
+  const chosen=questions.filter(q=>q.target&&q.target!=='user'&&!blocked(q.target));
+  const distinct=[...new Set(chosen.map(q=>q.target))];
+  distinct.slice(0,2).forEach(id=>wanted.push(id));
+  const first=chosen.find(q=>q.target===wanted[0]);
+  if(first){
+   message('grupo','circle','Uma pergunta anônima para '+pFor(wanted[0]).name+': "'+first.text+'"');
+  }
+ }else if(d.kind==='painting'){
+  const userEntry=d.entries.find(e=>e.by==='user');
+  if(userEntry?.target&&userEntry.target!=='user'&&!blocked(userEntry.target))wanted.push(userEntry.target);
  }
- log('As reações foram liberadas no chat geral.','social');
+ while(wanted.length<Math.min(2,liveBots.length)){
+  const available=liveBots.filter(p=>!wanted.includes(p.id));
+  if(!available.length)break;wanted.push(pick(available).id);
+ }
+ if(window.CircleAI?.signedIn()&&wanted.length){
+  for(const id of wanted){
+   let objective='A dinâmica '+d.title+' acabou. O Circle anunciou o resultado: '+d.summary+' Reaja especificamente a isso no grupo. Não repita o anúncio nem fale genericamente sobre o jogo. Faça um comentário condizente com seus sentimentos e com quem você já conhece.';
+   if(d.kind==='bomb'){
+    const question=d.meta?.questions?.find(q=>q.target===id);
+    if(question)objective='Uma pergunta anônima foi direcionada a vc, '+pFor(id).name+': "'+question.text+'". Responda A ESSA PERGUNTA no grupo de maneira direta e humana. Vc pode ficar desconfortável, mas não fuja para frases genéricas. Não diga quem perguntou, pq não sabe.';
+   }
+   if(d.kind==='poll'){
+    const p=d.meta?.poll;const suspect=p?.suspected?.[0]?.id===id;
+    const trusted=p?.trusted?.[0]?.id===id;
+    if(suspect)objective+=' Vc recebeu o maior número de suspeitas de ser catfish. Vc pode ficar incomodado e defender seu perfil sem revelar identidade secreta.';
+    if(trusted)objective+=' Vc ficou em primeiro entre os mais confiáveis. Reaja de forma natural, sem arrogância obrigatória.';
+   }
+   npcReply('grupo',id,objective,'@circle',3000+Math.floor(rand()*2000));
+  }
+ }
+ log('Reações abertas no chat geral.','social');
  save();render();
+}
+function answerBomb(key,skip=false){
+ const d=(game.dynamics||{})[key];if(!d||d.kind!=='bomb'||!['discussion','results'].includes(d.stage))return;
+ const q=d.meta?.questions?.filter(x=>x.target==='user')||[];
+ if(!q.length)return toast('Nenhuma pergunta foi dirigida ao seu perfil.');
+ if(d.answeredUser)return toast('Vc já respondeu essa rodada.');
+ const answer=skip?'Prefiro não responder essa pergunta agora.':taskChoice('dyn-answer');
+ if(!skip&&answer.length<3)return toast('Escreva sua resposta ou escolha não responder.');
+ d.answeredUser=answer.slice(0,500);
+ message('grupo','user',d.answeredUser);
+ log(skip?'Vc optou por não responder à bomba anônima.':'Vc respondeu a uma pergunta anônima.','game');
+ save();render();toast('Sua resposta apareceu no chat geral.');
 }
 function finishDynamic(key){
  const d=(game.dynamics||{})[key];if(!d||!['results','discussion'].includes(d.stage))return;
  if(d.stage==='results')reactDynamic(key);
+ if(d.kind==='bomb'&&d.meta?.questions?.some(q=>q.target==='user')&&!d.answeredUser)return toast('Antes de concluir, responda à pergunta anônima dirigida a vc ou escolha não responder.');
  d.stage='complete';d.completedAt=Date.now();openedDynamic=null;
  log('Dinâmica concluída: '+d.title+'. As decisões da casa foram registradas.','game');
  save();render();toast('Dinâmica concluída! Vc já pode seguir para o próximo dia.');
@@ -310,14 +357,15 @@ function dynResults(d){
  if(d.kind==='poll')cards='<div class="dyn-note">Seu voto: '+E(d.entries[0]?.detail||'Registrado')+'. Os outros votos são secretos; os números abaixo já incluem os oito participantes.</div>';
  if(d.kind==='rival'||d.kind==='ally')cards='<div class="dyn-note">Sua escolha: '+E(d.entries[0]?.detail||'Registrada')+'. As escolhas individuais dos outros participantes são sigilosas.</div>';
  let base='<div class="dyn-results"><div class="dyn-headline"><span class="pill">ALERTA! O CIRCLE REVELOU</span><h2>'+E(d.headline)+'</h2><p>'+E(d.summary)+'</p></div>'+cards+charts+'<div class="dyn-note">'+E(d.stake)+'</div>';
+ const bombsToUser=d.kind==='bomb'?(d.meta?.questions||[]).filter(q=>q.target==='user'):[];
  if(d.stage==='complete')base+='<div class="row"><span class="pill green">✓ Dinâmica concluída</span><button class="btn secondary sm" data-act="nav" data-to="chats">Ver conversas</button></div>';
  else if(d.stage==='results')base+='<button class="btn" data-act="dynreact" data-id="'+E(d.key)+'">Abrir reações dos jogadores →</button>';
- else if(d.stage==='discussion')base+='<div class="alert"><strong>Os resultados já chegaram aos chats!</strong><p>As relações e suspeitas foram atualizadas. As reações dos participantes aparecerão no chat geral quando a IA estiver conectada.</p></div><div class="row"><button class="btn secondary" data-act="nav" data-to="chats">Ver chat geral</button><button class="btn" data-act="dynfinish" data-id="'+E(d.key)+'">Concluir dinâmica</button></div>';
+ else if(d.stage==='discussion')base+='<div class="alert"><strong>O Circle anunciou o resultado!</strong><p>As relações e suspeitas foram atualizadas. Os jogadores estão liberados para reagir no chat geral.</p></div>'+(bombsToUser.length?'<div class="dyn-section"><h3>Uma pergunta anônima chegou para vc</h3>'+bombsToUser.map(q=>'<p class="muted">'+E(q.text)+'</p>').join('')+(d.answeredUser?'<div class="alert success">Sua resposta: '+E(d.answeredUser)+'</div>':'<textarea class="field" maxlength="500" id="dyn-answer" placeholder="Sua resposta aparece com seu nome no chat geral..."></textarea><div class="row"><button class="btn secondary sm" data-act="dynanswer" data-id="'+E(d.key)+'">Responder</button><button class="btn ghost sm" data-act="dynskip" data-id="'+E(d.key)+'">Prefiro não responder</button></div>')+'</div>':'')+'<div class="row"><button class="btn secondary" data-act="nav" data-to="chats">Ver chat geral</button><button class="btn" data-act="dynfinish" data-id="'+E(d.key)+'">Concluir dinâmica</button></div>';
  return base+'</div>';
 }
 function dynActive(d){
  if(d.stage!=='collecting')return dynResults(d);
- const elapsed=Math.max(0,Date.now()-d.submittedAt),count=Math.min(7,Math.max(0,Math.floor(elapsed/1500)));
+ const elapsed=Math.max(0,Date.now()-d.submittedAt),duration=Math.max(1000,d.releaseAt-d.submittedAt),count=Math.min(7,Math.max(0,Math.floor(7*elapsed/duration)));
  const ready=Date.now()>=d.releaseAt;
  return '<section class="dyn-progress"><span class="pill">CIRCLE · APURAÇÃO</span><h2>Os jogadores estão participando</h2><p class="muted">Sua resposta já foi enviada. O Circle está reunindo as escolhas dos outros sete participantes desta simulação.</p><div class="dyn-progress-track"><div style="width:'+Math.round(100*count/7)+'%"></div></div><div class="spread"><strong>'+count+' de 7 participantes</strong><span>'+(!ready?'Preparando resultados...':'Todas as respostas recebidas')+'</span></div>'+(ready?'<button class="btn" data-act="dynreveal" data-id="'+E(d.key)+'">Revelar resultados do Circle</button>':'<div class="dyn-wait">O resultado será liberado em instantes.</div>')+'</section>';
 }
@@ -364,6 +412,8 @@ else if(action==='task')taskSubmit();
 else if(action==='dynreveal')revealDynamic(id);
 else if(action==='dynreact')reactDynamic(id);
 else if(action==='dynfinish')finishDynamic(id);
+else if(action==='dynanswer')answerBomb(id,false);
+else if(action==='dynskip')answerBomb(id,true);
 else if(action==='dynopen'){openedDynamic=id;view='jogos';render();}
 else if(action==='dynback'){openedDynamic=null;render();}
 else if(action==='clearpaint'){const p=$('paintboard');if(p){p.getContext('2d').clearRect(0,0,p.width,p.height);painted=false;}}
@@ -415,4 +465,5 @@ try{const stored=localStorage.getItem(KEY);if(stored){const o=JSON.parse(stored)
 if(game){checkReal();}
 render();
 setInterval(()=>{if(game&&game.mode==='real')checkReal();},60000);
+setInterval(()=>{if(!game||view!=='jogos')return;const current=openedDynamic?game.dynamics?.[openedDynamic]:dynState(dueTask());if(current?.stage==='collecting')render();},1200);
 })();
