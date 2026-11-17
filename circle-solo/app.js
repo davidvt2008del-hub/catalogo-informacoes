@@ -216,6 +216,7 @@ async function enrichDynamic(key){
   for(const entry of d.entries){
    if(lines[entry.by]&&entry.by!=='user'){
     entry.detail=lines[entry.by];
+    if(d.kind==='bomb'&&Array.isArray(d.meta?.questions)){const q=d.meta.questions.find(q=>q.by===entry.by);if(q)q.text=lines[entry.by];}
     if(game.bots[entry.by]){
      game.bots[entry.by].memory.unshift('Na dinâmica '+d.title+': '+lines[entry.by].slice(0,140));
      game.bots[entry.by].memory=game.bots[entry.by].memory.slice(0,12);
