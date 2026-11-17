@@ -103,7 +103,7 @@ if(t.angry){}else if(t.nice||t.trust){}else if(t.sus&&t.other&&t.other.id===id)u
 return answer;
 }
 function npcSay(room,id,text){message(room,id,text);save();if(view==='chats')render();}
-function send(){if(game.gameOver||blocked('user'))return toast('A sua participação no Circle terminou.');let text=(draft||$('composer')?.value||'').trim().slice(0,1200);if(!text)return toast('Escreva uma mensagem primeiro.');draft='';message(chat,'user',text);const dest=chat;let receivers=dest==='grupo'?shuffle(people.filter(p=>!blocked(p.id))).slice(0,2+Math.floor(rand()*2)):people.filter(p=>p.id===dest&&!blocked(p.id));for(const p of receivers){let delay=550+Math.floor(rand()*1500);typingIds[p.id]=true;setTimeout(()=>{if(!game||game.gameOver)return;const output=response(p.id,text,dest);delete typingIds[p.id];npcSay(dest,p.id,output);},delay);}if(dest==='grupo'&&rand()<.21)updateTrust(pick(receivers).id,3,'Vc participou do grupo.');save();render();}
+function send(){if(game.gameOver||blocked('user'))return toast('A sua participação no Circle terminou.');let text=(draft||$('composer')?.value||'').trim().slice(0,1200);text=text.replace(/^(circle[\s,.:]*)?(escreve a[ií]|escreva a[ií]|escreve|digita)[\s,.:]*/i,'').replace(/[,.; ]*circle[\s,.:]*enviar[.! ]*$/i,'').trim();if(!text)return toast('Escreva uma mensagem primeiro.');draft='';message(chat,'user',text);const dest=chat;let receivers=dest==='grupo'?shuffle(people.filter(p=>!blocked(p.id))).slice(0,2+Math.floor(rand()*2)):people.filter(p=>p.id===dest&&!blocked(p.id));for(const p of receivers){let delay=550+Math.floor(rand()*1500);typingIds[p.id]=true;setTimeout(()=>{if(!game||game.gameOver)return;const output=response(p.id,text,dest);delete typingIds[p.id];npcSay(dest,p.id,output);},delay);}if(dest==='grupo'&&rand()<.21)updateTrust(pick(receivers).id,3,'Vc participou do grupo.');save();render();}
 function initiative(){const available=people.filter(p=>!blocked(p.id));if(!available.length)return;const actor=pick(available),other=pick(available.filter(p=>p.id!==actor.id));const texts=[
 'Tô curiosa: quem aqui acha que já encontrou um catfish? 👀',
 'Eu não consigo decidir em quem confiar. Uma hora a conversa flui, outra fica tudo estranho.',
@@ -203,9 +203,9 @@ if(/^(circle )?(parar de falar|silencio)$/.test(s)){if('speechSynthesis' in wind
 let text=raw.replace(/^(circle[\s,.:]*)?(escreve a[ií]|escreva a[ií]|escreve|digita|ditar|mensagem)[\s,.:]*/i,'').trim();
 if(!text)text=raw;
 if(view!=='chats')view='chats';
-draft=(draft?draft+' ':'')+text;
-render();toast('Mensagem transcrita. Diga “Circle, enviar” ou toque em ➤.');}
-function microphone(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){toast('Reconhecimento de voz não disponível aqui. Use o microfone do teclado do celular ou Chrome compatível.');return;}
+const sendAfter=/[,.; ]*circle[\s,.:]*enviar[.! ]*$/i.test(text);text=text.replace(/[,.; ]*circle[\s,.:]*enviar[.! ]*$/i,'').trim();draft=(draft?draft+' ':'')+text;
+render();if(sendAfter)send();else toast('Mensagem transcrita. Diga “Circle, enviar” ou toque em ➤.');}
+function microphone(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){if(view!=='chats'){view='chats';render();}const box=$('composer');if(box)box.focus();toast('Neste navegador, use o microfone do teclado para ditar. Diga “Circle, escreve aí...” e toque em enviar.');return;}
 if(recognition&&listening){recognition.stop();return;}
 try{recognition=new SR();recognition.lang='pt-BR';recognition.interimResults=false;recognition.continuous=false;recognition.maxAlternatives=1;recognition.onstart=()=>{listening=true;render();toast('O Circle está ouvindo. Pode falar!');};recognition.onresult=ev=>{const text=ev.results[ev.results.length-1][0].transcript;parseVoice(text);};recognition.onerror=ev=>{if(ev.error!=='no-speech'&&ev.error!=='aborted')toast('O microfone falhou: '+ev.error+'. Verifique a permissão.');};recognition.onend=()=>{listening=false;recognition=null;if(game)render();};recognition.start();}catch(e){toast('Não foi possível iniciar o microfone. Verifique as permissões do navegador.');}}
 $('app').addEventListener('click',act);
