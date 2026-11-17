@@ -79,6 +79,18 @@ function histogram(entries,k,game,people){
  const counts={};for(const e of entries){const id=e[k];if(id)counts[id]=(counts[id]||0)+1;}
  return Object.entries(counts).map(([id,count])=>({id,label:name(game,people,id),count})).sort((a,b)=>b.count-a.count||a.label.localeCompare(b.label));
 }
+function botArt(symbol,random){
+ const palette=['#eeb8ce','#a8cbdc','#fff1c5','#cbb9e9','#b7dfd2','#ddbaa8'];
+ const bg=randomPick(palette,random),color=randomPick(palette.filter(c=>c!==bg),random);
+ const strokes=[];
+ for(let i=0;i<7;i++){
+  const x=Math.floor(20+random()*310),y=Math.floor(20+random()*190),dx=Math.floor(random()*65+20),dy=Math.floor(random()*35+10);
+  const weight=Math.floor(3+random()*12);
+  strokes.push('<path d="M '+x+' '+y+' q '+dx+' '+(-dy)+' '+(dx+20)+' '+(dy)+'" fill="none" stroke="'+color+'" stroke-width="'+weight+'" stroke-linecap="round" opacity=".58"/>');
+ }
+ const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 240"><rect width="400" height="240" rx="16" fill="'+bg+'"/><circle cx="200" cy="120" r="72" fill="#ffffff" opacity=".42"/>'+strokes.join('')+'<text x="200" y="149" text-anchor="middle" font-size="86">'+symbol+'</text></svg>';
+ return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+}
 function cloneEntry(by,label,detail,extras={}){return {by,label,detail,...extras};}
 function modeName(kind){
  return ({zodiac:'Descubra o signo',poll:'Pesquisa de Opinião',truth:'Jogo da Verdade',quiz:'Mentes Brilhantes',painting:'Pintando Verdades',rival:'Meu Maior Rival',bomb:'A Última Bomba',dance:'Segue o Baile',party:'Festa do Circle',quote:'Quem disse isso?',confession:'Confissões',ally:'Compatibilidade'})[kind]||kind;
@@ -178,7 +190,7 @@ function resolved(game,people,c,input,random){
   const symbols=['🌻','🎭','🌊','🔥','🎵','⭐','🎨','☕'];
   for(const p of bots){const target=randomPick(all.filter(x=>x!==p.id),random);
    const symbol=randomPick(symbols,random);
-   opinion(p.id,'Pintura de '+p.name,symbol+' · '+name(game,people,target)+' visto(a) como '+randomPick(['uma pessoa luminosa','alguém misterioso','uma energia tranquila','alguém cheio de histórias','uma pessoa divertida','um desafio'],random),{target,symbol});
+   opinion(p.id,'Pintura de '+p.name,name(game,people,target)+' visto(a) como '+randomPick(['uma pessoa luminosa','alguém misterioso','uma energia tranquila','alguém cheio de histórias','uma pessoa divertida','um desafio'],random),{target,symbol,image:botArt(symbol,random)});
   }
   let grouped=tally(entries,'target','Quem apareceu mais nos desenhos?');
   headline='O Circle abriu a galeria anônima';
@@ -220,10 +232,16 @@ function resolved(game,people,c,input,random){
  else if(c.type==='party'){
   opinion('user','Seu look','Look: '+input.text+'. Música: '+input.song);
   for(const p of bots)opinion(p.id,'Look de '+p.name,randomPick(outfits[p.id],random)+' Música: '+randomPick(track[p.id],random)+'.');
+  const nomineeScores=all.map(id=>{
+    const entry=entries.find(e=>e.by===id);
+    const written=(entry?.detail||'').length;
+    const social=id==='user'?65:(people.find(p=>p.id===id)?.traits.social||55);
+    return {id,creative:written*.15+random()*28,sound:random()*55+social*.15,visual:written*.13+social*.35+random()*20};
+  });
   const prizes=[
-   {label:'Mais criativo',id:randomPick(all,random)},
-   {label:'Melhor trilha sonora',id:randomPick(all,random)},
-   {label:'Visual mais comentado',id:randomPick(all,random)}
+   {label:'Mais criativo',id:nomineeScores.slice().sort((a,b)=>b.creative-a.creative)[0].id},
+   {label:'Melhor trilha sonora',id:nomineeScores.slice().sort((a,b)=>b.sound-a.sound)[0].id},
+   {label:'Visual mais comentado',id:nomineeScores.slice().sort((a,b)=>b.visual-a.visual)[0].id}
   ];
   sections.push({title:'Destaques da festa',type:'notes',rows:prizes.map(p=>({label:p.label,detail:name(game,people,p.id)}))});
   headline='A Festa do Circle movimentou os apartamentos';
@@ -284,7 +302,7 @@ function resolved(game,people,c,input,random){
   outcome={protected:pair};
  }
  else throw Error('Tipo de dinâmica desconhecido: '+c.type);
- return {key:c.key,kind:c.type,title:c.title,headline,summary,reaction,stake,entries,sections,meta:outcome,submittedAt:Date.now(),releaseAt:Date.now()+13500+Math.floor(random()*4000),stage:'collecting',resultRead:false,reacted:false};
+ return {key:c.key,kind:c.type,title:c.title,headline,summary,reaction,stake,entries,sections,meta:outcome,submittedAt:Date.now(),releaseAt:Date.now()+13500+Math.floor(random()*4000),stage:'collecting',botCount:bots.length,resultRead:false,reacted:false};
 }
 window.CircleDynamics={signs,quiz,styles,publicSigns,modeName,context,resolved,alive,quotes};
 })();
